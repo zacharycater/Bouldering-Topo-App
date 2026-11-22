@@ -29,34 +29,58 @@ input,textarea{width:100%;padding:11px;font:inherit;border:1px solid var(--line)
 button.p,button.s,button.d{padding:12px 14px;font:700 15px system-ui;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--acc-t);margin-top:8px}
 button.s{background:none;color:var(--ink);border-color:var(--line)}button.d{background:none;color:var(--red);border-color:var(--red)}
 button.p.full{width:100%;padding:15px;margin-top:20px}
-canvas.topo{width:100%;border-radius:10px;touch-action:none;display:block;margin-top:10px;background:var(--line)}
+canvas.topo{max-width:100%;max-height:58vh;width:auto;border-radius:10px;touch-action:pan-y;display:block;margin:10px auto 0;background:var(--line)}canvas.topo.dr{touch-action:none;outline:3px solid var(--red)}
 #v-detail h2{margin:12px 0 4px}
+h3{margin:22px 0 6px;font-size:16px}#v-more button{display:block;width:100%}#v-more .row button{width:auto}
+.bar{display:flex;gap:8px;margin-bottom:12px}.bar select{flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}.bar button{margin:0}
+#v-map{position:relative}#mapbar{position:absolute;top:10px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:6px;align-items:flex-end}#mapbar button{margin:0;box-shadow:0 1px 4px #0006}#mapbar span{background:var(--card);color:var(--ink);padding:4px 8px;border-radius:6px;font-size:13px}
+#upd{display:none;position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:3000;background:var(--ink);color:var(--paper);padding:13px 14px;border-radius:10px;font-weight:700;text-align:center}
 </style></head><body>
 <header><h1 id="ttl">Boulders</h1><span id="net"></span></header>
 <main>
-<section id="v-list"></section>
-<section id="v-map"><div id="map"></div></section>
+<section id="v-list"><div class="bar"><select id="fg"></select><button class="s" id="pdf" type="button">Export PDF</button></div><div id="items"></div></section>
+<section id="v-map"><div id="map"></div><div id="mapbar"><button class="p" id="sat" type="button">Satellite</button><span>Tiles you view are kept for offline use</span></div></section>
 <section id="v-add">
  <label>Problem name</label><input id="name" placeholder="Proposed name" autocomplete="off">
- <label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
+ <label>First ascent</label><input id="fa" value="Zach Cater" autocomplete="off">
+ <label>Sector (optional)</label><input id="sector" placeholder="e.g. Hemakuta Hill" autocomplete="off"><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
  <label>Photo</label>
  <div class="row"><button class="p" id="cam" type="button">Take photo</button><button class="s" id="gal" type="button">Choose photo</button></div>
  <input id="fcam" type="file" accept="image/*" capture="environment" hidden><input id="fgal" type="file" accept="image/*" hidden>
  <div id="drawbox" hidden>
   <canvas class="topo" id="cv"></canvas>
-  <p class="m" style="margin:6px 0">Draw the line with your finger. Start at the holds you start on.</p>
-  <div class="row"><button class="s" id="undo" type="button">Undo stroke</button><button class="s" id="clr" type="button">Clear line</button></div>
+  <p class="m" style="margin:6px 0">Scroll freely. Tap Draw line to trace the line, then Done to scroll again.</p>
+  <div class="row"><button class="p" id="dm" type="button">Draw line</button><button class="s" id="undo" type="button">Undo</button><button class="s" id="clr" type="button">Clear</button></div>
+  <button class="s" id="rot" type="button" style="width:100%">Rotate photo 90°</button>
  </div>
  <label>Description</label><textarea id="desc" rows="3" placeholder="Start, line, top-out, landing…"></textarea>
+ <label>Date and time</label><input id="when" type="datetime-local">
  <label>Location</label>
  <div class="row"><input id="lat" inputmode="decimal" placeholder="Latitude (15.3350)"><input id="lng" inputmode="decimal" placeholder="Longitude (76.4600)"></div>
  <p class="m" id="gpsmsg" style="margin:6px 0"></p><button class="s" id="regps" type="button">Get GPS again</button>
- <button class="p full" id="save" type="button">Save boulder</button>
+ <button class="p full" id="save" type="button">Save boulder</button><button class="s" id="cancel" type="button" hidden style="width:100%;margin-top:8px">Cancel edit</button>
 </section>
 <section id="v-detail"></section>
+<section id="v-more">
+ <h3 style="margin-top:0">Backup</h3><p class="m" id="bkst"></p>
+ <button class="p" id="mkbk" type="button">Create backup file</button>
+ <div id="bkout" hidden><div class="row"><button class="p" id="bkshare" type="button">Share to Drive…</button><button class="s" id="bkdl" type="button">Save to phone</button></div></div>
+ <button class="s" id="imp" type="button" style="margin-top:12px">Import backup file</button><input id="fimp" type="file" accept=".json,application/json" hidden><p class="m" id="impmsg"></p>
+ <h3>Google Drive</h3><p class="m" id="drst">Paste your own Google client ID, save it, then sign in. The app can only see files it creates itself.</p>
+ <input id="cid" placeholder="Client ID ending .apps.googleusercontent.com" autocomplete="off">
+ <button class="s" id="cidsave" type="button" style="margin-top:8px">Save client ID</button>
+ <button class="p" id="drsign" type="button" style="margin-top:8px">Sign in to Google Drive</button>
+ <button class="s" id="drup" type="button" style="margin-top:8px">Back up to Drive now</button>
+ <h3>Offline map pins</h3><p class="m">Save your boulder pins as a GPX file and open it in an offline maps app such as Organic Maps or OsmAnd.</p>
+ <button class="s" id="gpx" type="button">Export pins as GPX</button>
+ <h3>MapTiler key (optional)</h3><p class="m">Your own key. It stays on this phone and switches Satellite to MapTiler imagery.</p>
+ <input id="mtk" placeholder="Paste key" autocomplete="off"><button class="s" id="mtsave" type="button" style="margin-top:8px">Save key</button>
+</section>
 </main>
-<nav><button data-v="list" class="on">Topos</button><button data-v="map">Map</button><button data-v="add">Add</button></nav>
+<div id="upd">New version ready. Tap to reload.</div>
+<nav><button data-v="list" class="on">Topos</button><button data-v="map">Map</button><button data-v="add">Add</button><button data-v="more">More</button></nav>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const DB=new Promise((res,rej)=>{const r=indexedDB.open('boulderlog',1);r.onupgradeneeded=()=>r.result.createObjectStore('b',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
@@ -64,6 +88,9 @@ const tx=async(m,f)=>{const d=await DB;return new Promise((res,rej)=>{const t=d.
 const all=()=>tx('readonly',s=>s.getAll()),put=o=>tx('readwrite',s=>s.put(o)),del=id=>tx('readwrite',s=>s.delete(id));
 $('grades').innerHTML=['3','4','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10'].map(g=>`<option value="${g}">`).join('');
 const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt=s=>new Date(s).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'});
+const ls={get:k=>{try{return localStorage.getItem(k)}catch(_){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}}};
+const setWhen=d=>{const t=d?new Date(d):new Date();$('when').value=new Date(t-t.getTimezoneOffset()*6e4).toISOString().slice(0,16)};
 function net(){$('net').textContent=navigator.onLine?'Online':'Offline';$('net').className=navigator.onLine?'':'off'}
 addEventListener('online',net);addEventListener('offline',net);net();
 
@@ -74,15 +101,18 @@ function draw(cv,bmp,st){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getC
   path();c.lineWidth=w*.017;c.strokeStyle='#fff';c.stroke();path();c.lineWidth=w*.009;c.strokeStyle='#e5382b';c.stroke();
   c.beginPath();c.arc(s[0][0]*w,s[0][1]*cv.height,w*.016,0,7);c.fillStyle='#e5382b';c.fill();c.lineWidth=w*.005;c.strokeStyle='#fff';c.stroke()}}
 async function shrink(file){const b=await createImageBitmap(file),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',.82))}
-async function pick(f){if(!f)return;photo=await shrink(f);bm=await createImageBitmap(photo);strokes=[];$('drawbox').hidden=false;draw($('cv'),bm,strokes)}
+async function pick(f){if(!f)return;photo=await shrink(f);bm=await createImageBitmap(photo);strokes=[];$('drawbox').hidden=false;$('cv').classList.remove('dr');$('dm').textContent='Draw line';draw($('cv'),bm,strokes)}
 let photo=null;
 $('cam').onclick=()=>$('fcam').click();$('gal').onclick=()=>$('fgal').click();
 $('fcam').onchange=e=>pick(e.target.files[0]);$('fgal').onchange=e=>pick(e.target.files[0]);
 const cv=$('cv'),pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]};
-cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);cur=[pt(e)];strokes.push(cur);draw(cv,bm,strokes)};
+cv.onpointerdown=e=>{if(!cv.classList.contains('dr'))return;cv.setPointerCapture(e.pointerId);cur=[pt(e)];strokes.push(cur);draw(cv,bm,strokes)};
 cv.onpointermove=e=>{if(!cur)return;cur.push(pt(e));draw(cv,bm,strokes)};
 cv.onpointerup=cv.onpointercancel=()=>{cur=null};
 $('undo').onclick=()=>{strokes.pop();draw(cv,bm,strokes)};$('clr').onclick=()=>{strokes=[];draw(cv,bm,strokes)};
+$('dm').onclick=()=>{const on=cv.classList.toggle('dr');$('dm').textContent=on?'Done':'Draw line'};
+$('rot').onclick=async()=>{if(!bm)return;const c=document.createElement('canvas');c.width=bm.height;c.height=bm.width;const x=c.getContext('2d');x.translate(c.width,0);x.rotate(Math.PI/2);x.drawImage(bm,0,0);
+ photo=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));bm=await createImageBitmap(photo);strokes=strokes.map(s=>s.map(([a,b])=>[1-b,a]));draw(cv,bm,strokes)};
 
 // ---- GPS ----
 function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS not available. Enter coordinates by hand.';return}
@@ -90,36 +120,98 @@ function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS
  navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(6);$('lng').value=p.coords.longitude.toFixed(6);m.textContent='GPS fix, accuracy about '+Math.round(p.coords.accuracy)+' m'},
  ()=>{m.textContent='No GPS fix. Enter coordinates by hand or try again outside.'},{enableHighAccuracy:true,timeout:25000,maximumAge:20000})}
 $('regps').onclick=gps;
+let editing=null;
+function resetForm(){editing=null;['name','sector','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder'}
+$('cancel').onclick=()=>{resetForm();show('list')};
+async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('fa').value=b.fa??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;draw(cv,bm,strokes)}$('cancel').hidden=false;$('save').textContent='Save changes'}
 
 // ---- save ----
 $('save').onclick=async()=>{const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}
  const lat=parseFloat($('lat').value),lng=parseFloat($('lng').value);
- await put({id:Date.now()+'',name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date().toISOString()});
- ['name','grade','desc','lat','lng'].forEach(i=>$(i).value='');photo=bm=null;strokes=[];$('drawbox').hidden=true;$('fcam').value=$('fgal').value='';show('list')};
+ await put({id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),fa:$('fa').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()});
+ resetForm();show('list')};
 
 // ---- views ----
-const T={list:'Boulders',map:'Map',add:'New boulder',detail:'Boulder'};let map,layer;
+const T={list:'Boulders',map:'Map',add:'New boulder',detail:'Boulder',more:'More'};let map,layer;
 async function show(v){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
- document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===(v==='detail'?'list':v)));$('ttl').textContent=T[v];
- if(v==='list')await renderList();if(v==='map')await renderMap();if(v==='add'&&!$('lat').value)gps()}
-document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===(v==='detail'?'list':v)));$('ttl').textContent=v==='add'&&editing?'Edit boulder':T[v];
+ if(v==='list')await renderList();if(v==='map')await renderMap();if(v==='more')await renderMore();if(v==='add'&&!editing){if(!$('when').value)setWhen();if(!$('lat').value)gps()}}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='add'&&editing)resetForm();show(b.dataset.v)});
 async function thumb(cv,b){const m=await createImageBitmap(b.photo);const k=184/Math.min(m.width,m.height);const t=document.createElement('canvas');draw(t,m,b.strokes);cv.width=cv.height=184;cv.getContext('2d').drawImage(t,(t.width-184/k)/2,(t.height-184/k)/2,184/k,184/k,0,0,184,184)}
-async function renderList(){const bs=(await all()).sort((a,b)=>b.created.localeCompare(a.created));const el=$('v-list');
- if(!bs.length){el.innerHTML='<p class="empty">No boulders logged yet.<br>Tap Add to log your first.</p>';return}
- el.innerHTML='';for(const b of bs){const d=document.createElement('div');d.className='item';
-  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><span class="g">${esc(b.grade)||'?'}</span><div class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</div></div>`;
+let shown=[];
+async function renderList(){const A=(await all()).sort((a,b)=>b.created.localeCompare(a.created)),fg=$('fg'),sel=fg.value,gs=[...new Set(A.map(b=>b.grade).filter(Boolean))].sort();
+ fg.innerHTML='<option value="">All grades</option>'+gs.map(g=>`<option>${esc(g)}</option>`).join('');fg.value=gs.includes(sel)?sel:'';
+ shown=A.filter(b=>!fg.value||b.grade===fg.value);const el=$('items');
+ if(!shown.length){el.innerHTML='<p class="empty">'+(A.length?'No boulders at this grade.':'No boulders logged yet.<br>Tap Add to log your first.')+'</p>';return}
+ el.innerHTML='';for(const b of shown){const d=document.createElement('div');d.className='item';
+  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><span class="g">${esc(b.grade)||'?'}</span>${b.sector?'<div class="m">'+esc(b.sector)+'</div>':''}<div class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</div></div>`;
   d.onclick=()=>detail(b.id);el.appendChild(d);if(b.photo)thumb(d.querySelector('canvas'),b)}}
+$('fg').onchange=renderList;
+$('pdf').onclick=async()=>{if(!shown.length){alert('Nothing to export.');return}
+ if(!window.jspdf){alert('PDF tool not loaded. Open the app once with a connection.');return}
+ const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),L=[...shown].sort((a,b)=>(a.sector||'').localeCompare(b.sector||'')||a.name.localeCompare(b.name));
+ for(let i=0;i<L.length;i++){const b=L[i];if(i)doc.addPage();
+  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text(b.name,15,22,{maxWidth:150});doc.text(b.grade||'',195,22,{align:'right'});
+  doc.setFont('helvetica','normal').setFontSize(11);doc.text(b.sector||'No sector',15,30);doc.text('First ascent: '+(b.fa||'not recorded')+'   Logged: '+fmt(b.created),15,36);let y=43;
+  if(b.photo){const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const k=Math.min(180/c.width,170/c.height),w=c.width*k,h=c.height*k;doc.addImage(c.toDataURL('image/jpeg',.85),'JPEG',(210-w)/2,y,w,h);y+=h+8}
+  const t=doc.splitTextToSize(b.desc||'',180).slice(0,18);doc.text(t,15,y);y+=t.length*5+4;
+  if(b.lat!=null)doc.text('Coordinates: '+b.lat.toFixed(6)+', '+b.lng.toFixed(6),15,y);
+  doc.setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288);doc.text((i+1)+' / '+L.length,195,288,{align:'right'})}
+ doc.save('boulder-topos.pdf')};
+const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png',SAT='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';const MT='https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=';let osm,sat,isSat=false;function setSat(){const k=ls.get('mtkey');sat.setUrl(k?MT+k:SAT);sat.options.maxNativeZoom=k?19:17}
 async function renderMap(){if(!map){map=L.map('map').setView([15.335,76.46],13);
-  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,crossOrigin:true,attribution:'© OpenStreetMap contributors'}).addTo(map);layer=L.layerGroup().addTo(map)}
+  osm=L.tileLayer(OSM,{maxZoom:19,crossOrigin:true,attribution:'© OpenStreetMap contributors'}).addTo(map);sat=L.tileLayer(SAT,{maxZoom:19,maxNativeZoom:17,crossOrigin:true,attribution:'Imagery © Esri / MapTiler'});setSat();layer=L.layerGroup().addTo(map)}
  setTimeout(()=>map.invalidateSize(),50);layer.clearLayers();const pts=[];
  for(const b of await all()){if(b.lat==null)continue;pts.push([b.lat,b.lng]);
   const m=L.circleMarker([b.lat,b.lng],{radius:10,color:'#fff',weight:2,fillColor:'#e5382b',fillOpacity:1}).addTo(layer);
   const p=document.createElement('div');p.innerHTML=`<b>${esc(b.name)}</b> ${esc(b.grade)}<br>`;const a=document.createElement('a');a.href='#';a.textContent='Open topo';a.onclick=e=>{e.preventDefault();detail(b.id)};p.appendChild(a);m.bindPopup(p)}
  if(pts.length)map.fitBounds(pts,{padding:[40,40],maxZoom:17})}
+$('sat').onclick=()=>{isSat=!isSat;if(isSat){map.removeLayer(osm);sat.addTo(map)}else{map.removeLayer(sat);osm.addTo(map)}$('sat').textContent=isSat?'Map':'Satellite'};
 async function detail(id){const b=(await all()).find(x=>x.id===id);if(!b)return;await show('detail');const el=$('v-detail');
- el.innerHTML=`<button class="s" id="back">Back</button>${b.photo?'<canvas class="topo" id="dc"></canvas>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="d" id="rm">Delete boulder</button>`;
- $('back').onclick=()=>show('list');$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
+ el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${b.sector?'<p class="m">Sector: '+esc(b.sector)+'</p>':''}${b.fa?'<p class="m">First ascent: '+esc(b.fa)+'</p>':''}<p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
+ $('back').onclick=()=>show('list');$('ed').onclick=()=>edit(b);
+ $('up').onclick=async()=>{if(!b.photo){alert('This boulder has no photo.');return}if(!await authed())return;const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
+  try{await upload((b.sector?b.sector+' - ':'')+b.name+' '+(b.grade||'')+'.jpg',bl,[b.fa&&'First ascent: '+b.fa,b.desc,b.lat!=null&&b.lat+', '+b.lng].filter(Boolean).join('\n'));alert('Uploaded to Drive.')}catch(e){alert('Upload failed ('+e.message+'). Sign in again and retry.');tok=null}};$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
  if(b.photo)draw($('dc'),await createImageBitmap(b.photo),b.strokes)}
-if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+async function renderMore(){const A=await all(),t=+ls.get('lastbk')||0,n=A.filter(b=>new Date(b.created)>t).length;
+ $('bkst').textContent=t?`Last backup: ${fmt(t)}. ${n} boulder${n==1?'':'s'} logged since.`:`No backup yet. ${A.length} boulder${A.length==1?'':'s'} stored on this phone only.`;$('mtk').value=ls.get('mtkey')||'';$('cid').value=ls.get('cid')||'';if(ls.get('cid')&&navigator.onLine)gis().catch(()=>{})}
+let bk=null;const mark=()=>{ls.set('lastbk',Date.now());renderMore()};
+function dlf(f){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
+async function out(f){try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return true}}catch(e){if(e.name==='AbortError')return false}dlf(f);return true}
+$('mkbk').onclick=async()=>{$('bkst').textContent='Preparing backup…';const items=[];
+ for(const b of await all())items.push({...b,photo:b.photo?await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b.photo)}):null});
+ bk=new File([JSON.stringify({app:'boulderlog',v:1,exported:new Date().toISOString(),items})],'boulderlog-backup-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json',{type:'application/json'});
+ $('bkout').hidden=false;$('bkst').textContent=`Backup ready: ${items.length} boulders, ${(bk.size/1048576).toFixed(1)} MB.`};
+$('bkshare').onclick=async()=>{if(bk&&await out(bk))mark()};$('bkdl').onclick=()=>{if(bk){dlf(bk);mark()}};
+$('imp').onclick=()=>$('fimp').click();
+$('fimp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.app!=='boulderlog'||!Array.isArray(d.items))throw 0;
+ const have=new Set((await all()).map(b=>b.id));let n=0;for(const b of d.items){if(have.has(b.id))continue;if(b.photo)b.photo=await(await fetch(b.photo)).blob();await put(b);n++}
+ $('impmsg').textContent=`Imported ${n} new, skipped ${d.items.length-n} already on this phone.`}catch(_){$('impmsg').textContent='That file is not a Boulder Log backup.'}e.target.value=''};
+$('gpx').onclick=async()=>{const A=(await all()).filter(b=>b.lat!=null);if(!A.length){alert('No boulders with coordinates yet.');return}
+ await out(new File([`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Boulder Log" xmlns="http://www.topografix.com/GPX/1/1">\n`+A.map(b=>`<wpt lat="${b.lat}" lon="${b.lng}"><name>${esc(b.name)} ${esc(b.grade)}</name><desc>${esc([b.sector,b.desc].filter(Boolean).join(' - '))}</desc></wpt>`).join('\n')+'\n</gpx>'],'boulders.gpx',{type:'application/gpx+xml'}))};
+let tok=null,tokExp=0;
+function gis(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=res;s.onerror=()=>rej(new Error('offline'));document.head.appendChild(s)})}
+async function signIn(){const id=ls.get('cid');if(!id){alert('Paste your Google client ID and tap Save first.');return false}
+ if(!navigator.onLine){alert('Go online to sign in.');return false}
+ try{await gis()}catch(_){alert('Could not reach Google.');return false}
+ return new Promise(res=>google.accounts.oauth2.initTokenClient({client_id:id,scope:'https://www.googleapis.com/auth/drive.file',
+  callback:r=>{if(r.error){$('drst').textContent='Sign-in failed: '+r.error;res(false);return}tok=r.access_token;tokExp=Date.now()+(r.expires_in-60)*1000;$('drst').textContent='Signed in to Google Drive.';res(true)},
+  error_callback:e=>{$('drst').textContent='Sign-in cancelled or blocked ('+(e.type||'error')+').';res(false)}}).requestAccessToken())}
+const authed=async()=>tok&&Date.now()<tokExp?true:signIn();
+async function dapi(url,o){const r=await fetch(url,{...o,headers:{...(o&&o.headers),Authorization:'Bearer '+tok}});if(!r.ok)throw new Error(r.status);return r.json()}
+async function folder(){const id=ls.get('drfolder');if(id){try{const f=await dapi('https://www.googleapis.com/drive/v3/files/'+id+'?fields=id,trashed');if(!f.trashed)return id}catch(_){}}
+ const f=await dapi('https://www.googleapis.com/drive/v3/files',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:'Boulder Log',mimeType:'application/vnd.google-apps.folder'})});ls.set('drfolder',f.id);return f.id}
+async function upload(name,blob,desc){const p=await folder(),fd=new FormData();fd.append('metadata',new Blob([JSON.stringify({name,parents:[p],description:desc||''})],{type:'application/json'}));fd.append('file',blob);
+ return dapi('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart&fields=id,name',{method:'POST',body:fd})}
+$('cidsave').onclick=()=>{ls.set('cid',$('cid').value.trim());ls.set('drfolder','');tok=null;if(navigator.onLine)gis().catch(()=>{});$('drst').textContent='Client ID saved. Now sign in.'};
+$('drsign').onclick=()=>signIn();
+$('drup').onclick=async()=>{if(!await authed())return;await $('mkbk').onclick();$('drst').textContent='Uploading to Drive…';
+ try{const f=await upload(bk.name,bk,'Boulder Log backup');mark();$('drst').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('drst').textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}};
+$('mtsave').onclick=()=>{ls.set('mtkey',$('mtk').value.trim());if(sat)setSat();alert('Saved. Satellite now uses MapTiler.')};
+if('serviceWorker'in navigator){let rl=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rl)location.reload()});
+ navigator.serviceWorker.register('sw.js').then(reg=>{const ready=w=>{$('upd').style.display='block';$('upd').onclick=()=>{rl=true;w.postMessage('skip')}};
+  if(reg.waiting&&navigator.serviceWorker.controller)ready(reg.waiting);
+  reg.addEventListener('updatefound',()=>{const w=reg.installing;w.addEventListener('statechange',()=>{if(w.state==='installed'&&navigator.serviceWorker.controller)ready(w)})});
+  reg.update().catch(()=>{})})}
 show('list');
 </script></body></html>
