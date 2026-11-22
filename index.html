@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#232826"><link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png"><title>Boulder Log</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
+<style>
+:root{--ink:#232826;--paper:#eef0ea;--card:#fff;--mute:#677069;--line:#d3d7cf;--acc:#3e6b48;--acc-t:#fff;--red:#e5382b}
+@media(prefers-color-scheme:dark){:root{--ink:#e9ece6;--paper:#171a18;--card:#222725;--mute:#97a199;--line:#363c38;--acc:#7fb58a;--acc-t:#10150f}}
+*{box-sizing:border-box}html,body{height:100%;margin:0}
+body{font:16px/1.4 system-ui,sans-serif;background:var(--paper);color:var(--ink);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top)}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+h1{font-size:20px;margin:0;font-weight:800;letter-spacing:-.01em}
+#net{font-size:13px;color:var(--mute)}#net.off::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--red);margin-right:6px}
+main{flex:1;overflow:auto;position:relative}
+section{display:none;padding:14px 16px 24px}section.on{display:block}
+#v-map{padding:0;height:100%}#v-map.on{display:block}#map{height:100%;min-height:300px}
+nav{display:flex;border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom);background:var(--card)}
+nav button{flex:1;padding:14px 0;border:0;background:none;color:var(--mute);font:600 15px system-ui;border-top:3px solid transparent}
+nav button.on{color:var(--ink);border-top-color:var(--acc)}
+.item{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:10px;margin-bottom:10px;overflow:hidden;cursor:pointer}
+.item canvas,.item .ph{width:92px;height:92px;object-fit:cover;flex:none;background:var(--line)}
+.item div.t{padding:10px 10px 10px 0;min-width:0}.item b{display:block;font-size:17px}
+.g{display:inline-block;font-weight:800;font-size:15px;font-variant-numeric:tabular-nums;background:var(--acc);color:var(--acc-t);border-radius:6px;padding:1px 8px;margin-right:6px}
+.m{color:var(--mute);font-size:14px}.empty{text-align:center;color:var(--mute);margin-top:60px}
+label{display:block;font-weight:600;font-size:14px;margin:14px 0 4px}
+input,textarea{width:100%;padding:11px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink)}
+.row{display:flex;gap:10px}.row>*{flex:1}
+button.p,button.s,button.d{padding:12px 14px;font:700 15px system-ui;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--acc-t);margin-top:8px}
+button.s{background:none;color:var(--ink);border-color:var(--line)}button.d{background:none;color:var(--red);border-color:var(--red)}
+button.p.full{width:100%;padding:15px;margin-top:20px}
+canvas.topo{width:100%;border-radius:10px;touch-action:none;display:block;margin-top:10px;background:var(--line)}
+#v-detail h2{margin:12px 0 4px}
+</style></head><body>
+<header><h1 id="ttl">Boulders</h1><span id="net"></span></header>
+<main>
+<section id="v-list"></section>
+<section id="v-map"><div id="map"></div></section>
+<section id="v-add">
+ <label>Problem name</label><input id="name" placeholder="Proposed name" autocomplete="off">
+ <label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
+ <label>Photo</label>
+ <div class="row"><button class="p" id="cam" type="button">Take photo</button><button class="s" id="gal" type="button">Choose photo</button></div>
+ <input id="fcam" type="file" accept="image/*" capture="environment" hidden><input id="fgal" type="file" accept="image/*" hidden>
+ <div id="drawbox" hidden>
+  <canvas class="topo" id="cv"></canvas>
+  <p class="m" style="margin:6px 0">Draw the line with your finger. Start at the holds you start on.</p>
+  <div class="row"><button class="s" id="undo" type="button">Undo stroke</button><button class="s" id="clr" type="button">Clear line</button></div>
+ </div>
+ <label>Description</label><textarea id="desc" rows="3" placeholder="Start, line, top-out, landing…"></textarea>
+ <label>Location</label>
+ <div class="row"><input id="lat" inputmode="decimal" placeholder="Latitude (15.3350)"><input id="lng" inputmode="decimal" placeholder="Longitude (76.4600)"></div>
+ <p class="m" id="gpsmsg" style="margin:6px 0"></p><button class="s" id="regps" type="button">Get GPS again</button>
+ <button class="p full" id="save" type="button">Save boulder</button>
+</section>
+<section id="v-detail"></section>
+</main>
+<nav><button data-v="list" class="on">Topos</button><button data-v="map">Map</button><button data-v="add">Add</button></nav>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const DB=new Promise((res,rej)=>{const r=indexedDB.open('boulderlog',1);r.onupgradeneeded=()=>r.result.createObjectStore('b',{keyPath:'id'});r.onsuccess=()=>res(r.result);r.onerror=()=>rej(r.error)});
+const tx=async(m,f)=>{const d=await DB;return new Promise((res,rej)=>{const t=d.transaction('b',m),q=f(t.objectStore('b'));t.oncomplete=()=>res(q.result);t.onerror=()=>rej(t.error)})};
+const all=()=>tx('readonly',s=>s.getAll()),put=o=>tx('readwrite',s=>s.put(o)),del=id=>tx('readwrite',s=>s.delete(id));
+$('grades').innerHTML=['3','4','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','V0','V1','V2','V3','V4','V5','V6','V7','V8','V9','V10'].map(g=>`<option value="${g}">`).join('');
+const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+function net(){$('net').textContent=navigator.onLine?'Online':'Offline';$('net').className=navigator.onLine?'':'off'}
+addEventListener('online',net);addEventListener('offline',net);net();
+
+// ---- drawing ----
+let bm=null,strokes=[],cur=null;
+function draw(cv,bmp,st){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getContext('2d');c.drawImage(bmp,0,0);c.lineCap=c.lineJoin='round';const w=cv.width;
+ for(const s of st){if(!s.length)continue;const path=()=>{c.beginPath();s.forEach(([x,y],i)=>i?c.lineTo(x*w,y*cv.height):c.moveTo(x*w,y*cv.height))};
+  path();c.lineWidth=w*.017;c.strokeStyle='#fff';c.stroke();path();c.lineWidth=w*.009;c.strokeStyle='#e5382b';c.stroke();
+  c.beginPath();c.arc(s[0][0]*w,s[0][1]*cv.height,w*.016,0,7);c.fillStyle='#e5382b';c.fill();c.lineWidth=w*.005;c.strokeStyle='#fff';c.stroke()}}
+async function shrink(file){const b=await createImageBitmap(file),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',.82))}
+async function pick(f){if(!f)return;photo=await shrink(f);bm=await createImageBitmap(photo);strokes=[];$('drawbox').hidden=false;draw($('cv'),bm,strokes)}
+let photo=null;
+$('cam').onclick=()=>$('fcam').click();$('gal').onclick=()=>$('fgal').click();
+$('fcam').onchange=e=>pick(e.target.files[0]);$('fgal').onchange=e=>pick(e.target.files[0]);
+const cv=$('cv'),pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]};
+cv.onpointerdown=e=>{cv.setPointerCapture(e.pointerId);cur=[pt(e)];strokes.push(cur);draw(cv,bm,strokes)};
+cv.onpointermove=e=>{if(!cur)return;cur.push(pt(e));draw(cv,bm,strokes)};
+cv.onpointerup=cv.onpointercancel=()=>{cur=null};
+$('undo').onclick=()=>{strokes.pop();draw(cv,bm,strokes)};$('clr').onclick=()=>{strokes=[];draw(cv,bm,strokes)};
+
+// ---- GPS ----
+function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS not available. Enter coordinates by hand.';return}
+ m.textContent='Getting GPS fix…';
+ navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(6);$('lng').value=p.coords.longitude.toFixed(6);m.textContent='GPS fix, accuracy about '+Math.round(p.coords.accuracy)+' m'},
+ ()=>{m.textContent='No GPS fix. Enter coordinates by hand or try again outside.'},{enableHighAccuracy:true,timeout:25000,maximumAge:20000})}
+$('regps').onclick=gps;
+
+// ---- save ----
+$('save').onclick=async()=>{const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}
+ const lat=parseFloat($('lat').value),lng=parseFloat($('lng').value);
+ await put({id:Date.now()+'',name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date().toISOString()});
+ ['name','grade','desc','lat','lng'].forEach(i=>$(i).value='');photo=bm=null;strokes=[];$('drawbox').hidden=true;$('fcam').value=$('fgal').value='';show('list')};
+
+// ---- views ----
+const T={list:'Boulders',map:'Map',add:'New boulder',detail:'Boulder'};let map,layer;
+async function show(v){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===(v==='detail'?'list':v)));$('ttl').textContent=T[v];
+ if(v==='list')await renderList();if(v==='map')await renderMap();if(v==='add'&&!$('lat').value)gps()}
+document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>show(b.dataset.v));
+async function thumb(cv,b){const m=await createImageBitmap(b.photo);const k=184/Math.min(m.width,m.height);const t=document.createElement('canvas');draw(t,m,b.strokes);cv.width=cv.height=184;cv.getContext('2d').drawImage(t,(t.width-184/k)/2,(t.height-184/k)/2,184/k,184/k,0,0,184,184)}
+async function renderList(){const bs=(await all()).sort((a,b)=>b.created.localeCompare(a.created));const el=$('v-list');
+ if(!bs.length){el.innerHTML='<p class="empty">No boulders logged yet.<br>Tap Add to log your first.</p>';return}
+ el.innerHTML='';for(const b of bs){const d=document.createElement('div');d.className='item';
+  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><span class="g">${esc(b.grade)||'?'}</span><div class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</div></div>`;
+  d.onclick=()=>detail(b.id);el.appendChild(d);if(b.photo)thumb(d.querySelector('canvas'),b)}}
+async function renderMap(){if(!map){map=L.map('map').setView([15.335,76.46],13);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,crossOrigin:true,attribution:'© OpenStreetMap contributors'}).addTo(map);layer=L.layerGroup().addTo(map)}
+ setTimeout(()=>map.invalidateSize(),50);layer.clearLayers();const pts=[];
+ for(const b of await all()){if(b.lat==null)continue;pts.push([b.lat,b.lng]);
+  const m=L.circleMarker([b.lat,b.lng],{radius:10,color:'#fff',weight:2,fillColor:'#e5382b',fillOpacity:1}).addTo(layer);
+  const p=document.createElement('div');p.innerHTML=`<b>${esc(b.name)}</b> ${esc(b.grade)}<br>`;const a=document.createElement('a');a.href='#';a.textContent='Open topo';a.onclick=e=>{e.preventDefault();detail(b.id)};p.appendChild(a);m.bindPopup(p)}
+ if(pts.length)map.fitBounds(pts,{padding:[40,40],maxZoom:17})}
+async function detail(id){const b=(await all()).find(x=>x.id===id);if(!b)return;await show('detail');const el=$('v-detail');
+ el.innerHTML=`<button class="s" id="back">Back</button>${b.photo?'<canvas class="topo" id="dc"></canvas>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="d" id="rm">Delete boulder</button>`;
+ $('back').onclick=()=>show('list');$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
+ if(b.photo)draw($('dc'),await createImageBitmap(b.photo),b.strokes)}
+if('serviceWorker'in navigator)navigator.serviceWorker.register('sw.js');
+show('list');
+</script></body></html>
