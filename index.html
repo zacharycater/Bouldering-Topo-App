@@ -33,10 +33,13 @@ canvas.topo{max-width:100%;max-height:58vh;width:auto;border-radius:10px;touch-a
 #v-detail h2{margin:12px 0 4px}
 h3{margin:22px 0 6px;font-size:16px}
 .sec{font-weight:600;color:var(--acc);margin:1px 0 5px}
+.st{color:#c98a00;margin-right:6px;font-size:17px}.star{font-size:26px;padding:6px;margin-top:0}
+button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
+.sheet select{width:100%;padding:11px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin-bottom:8px}
 #sugg{border:1px solid var(--line);border-radius:8px;background:var(--card);margin-top:4px;max-height:220px;overflow:auto}#sugg div{padding:12px;border-bottom:1px solid var(--line)}#sugg div:last-child{border:0}
 .ck{display:flex;align-items:center;padding:0 0 0 12px;margin:0}.ck input,#selall,#pdfmap{width:24px;height:24px;padding:0;margin:0;accent-color:var(--acc)}
 .item .x{align-self:center;margin:0 10px 0 auto;padding:8px 10px;border:1px solid var(--red);color:var(--red);background:none;border-radius:8px;font:600 13px system-ui}
-#pdfopt{position:fixed;inset:0;background:#0007;z-index:4000;display:flex;align-items:flex-end}#pdfopt[hidden]{display:none}
+#pdfopt,#ukcopt{position:fixed;inset:0;background:#0007;z-index:4000;display:flex;align-items:flex-end}#pdfopt[hidden],#ukcopt[hidden]{display:none}
 .sheet{background:var(--card);width:100%;padding:16px 16px calc(16px + env(safe-area-inset-bottom));border-radius:14px 14px 0 0}.sheet button{display:block;width:100%}#v-more button{display:block;width:100%}#v-more .row button{width:auto}
 .bar{display:flex;gap:8px;margin-bottom:12px}.bar select{flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}.bar button{margin:0}
 #v-map{position:relative}#mapbar{position:absolute;top:10px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:6px;align-items:flex-end}#mapbar button{margin:0;box-shadow:0 1px 4px #0006}#mapbar span{background:var(--card);color:var(--ink);padding:4px 8px;border-radius:6px;font-size:13px}
@@ -44,10 +47,12 @@ h3{margin:22px 0 6px;font-size:16px}
 </style></head><body>
 <header><h1 id="ttl">Boulder Logger</h1><span id="net"></span></header>
 <main>
-<section id="v-list"><div class="bar"><select id="fs"></select><select id="fg"></select></div><div class="bar"><button class="s" id="pdf" type="button" style="flex:1">Export PDF</button></div><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="selall">Select all shown</label><div id="items"></div></section>
+<section id="v-list"><div class="bar"><select id="fs"></select><select id="fg"></select></div><div class="bar"><button class="s" id="pdf" type="button" style="flex:1">Export PDF</button><button class="s" id="ukc" type="button" style="flex:1">UKC file</button></div><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="selall">Select all shown</label><div id="items"></div></section>
 <section id="v-map"><div id="map"></div><div id="mapbar"><button class="p" id="sat" type="button">Satellite</button><span>Tiles you view are kept for offline use</span></div><div id="gattr" hidden style="position:absolute;left:6px;bottom:6px;z-index:1000;background:#fffc;padding:2px 6px;font-size:11px;border-radius:4px;color:#000"></div></section>
 <section id="v-add">
  <label>Problem name</label><input id="name" placeholder="Proposed name" autocomplete="off">
+ <label>Stars</label><div id="stars" class="row"></div>
+ <button class="s tg" id="sit" type="button" style="width:100%">Sit start</button>
  <label>First ascent</label><input id="fa" value="Zach Cater" autocomplete="off">
  <div class="row"><div><label>Country</label><input id="country" value="India" autocomplete="off"></div><div><label>Region</label><input id="region" value="Hampi" autocomplete="off"></div></div>
  <label>Sector (optional)</label><input id="sector" placeholder="e.g. Hemakuta Hill" autocomplete="off"><div id="sugg" hidden></div><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
@@ -87,6 +92,7 @@ h3{margin:22px 0 6px;font-size:16px}
 </section>
 </main>
 <div id="pdfopt" hidden><div class="sheet"><b>Export PDF</b><p class="m" id="pdfs"></p><label style="margin-top:0">File name</label><input id="pdfname" autocomplete="off" style="margin-bottom:10px"><label style="margin-top:0">Region and country (under the title)</label><input id="pdfreg" autocomplete="off" placeholder="e.g. Hampi, India" style="margin-bottom:10px"><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="pdfmap" checked>Include map page</label><button class="p" id="pdfphone" type="button">Save to phone</button><button class="p" id="pdfdrive" type="button">Upload to Google Drive</button><button class="s" id="pdfsign" type="button">Sign in to Google Drive</button><button class="s" id="pdfx" type="button">Close</button></div></div>
+<div id="ukcopt" hidden><div class="sheet"><b>UKC upload file</b><p class="m" id="ukcs"></p><label style="margin-top:0">The UKC crag is your</label><select id="ukclvl"><option value="r">Region (sectors become buttresses)</option><option value="s">Sector (one file per sector)</option></select><button class="p" id="ukcphone" type="button">Save to phone</button><button class="p" id="ukcdrive" type="button">Upload to Google Drive</button><button class="s" id="ukcsign" type="button">Sign in to Google Drive</button><button class="s" id="ukcx" type="button">Close</button></div></div>
 <div id="upd">New version ready. Tap to reload.</div>
 <nav><button data-v="list" class="on">Topos</button><button data-v="map">Map</button><button data-v="add">Add</button><button data-v="more">More</button></nav>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -130,15 +136,18 @@ function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS
  navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(6);$('lng').value=p.coords.longitude.toFixed(6);m.textContent='GPS fix, accuracy about '+Math.round(p.coords.accuracy)+' m'},
  ()=>{m.textContent='No GPS fix. Enter coordinates by hand or try again outside.'},{enableHighAccuracy:true,timeout:25000,maximumAge:20000})}
 $('regps').onclick=gps;
-let editing=null;
-function resetForm(){editing=null;['name','sector','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder'}
+let editing=null,stars=0,sit=false;
+function drawStars(){const s=$('stars');s.innerHTML='';for(let i=1;i<=3;i++){const b=document.createElement('button');b.type='button';b.className='s star';b.textContent=i<=stars?'★':'☆';b.onclick=()=>{stars=stars===i?i-1:i;drawStars()};s.appendChild(b)}}
+function sitUI(){$('sit').classList.toggle('on',sit);$('sit').textContent=sit?'Sit start: yes':'Sit start'}
+$('sit').onclick=()=>{sit=!sit;sitUI()};drawStars();sitUI();
+function resetForm(){editing=null;['name','sector','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder';stars=0;sit=false;drawStars();sitUI()}
 $('cancel').onclick=()=>{resetForm();show('list')};
-async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('fa').value=b.fa??'';$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;draw(cv,bm,strokes)}$('cancel').hidden=false;$('save').textContent='Save changes'}
+async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('fa').value=b.fa??'';$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;draw(cv,bm,strokes)}$('cancel').hidden=false;$('save').textContent='Save changes';stars=b.stars||0;sit=!!b.sit;drawStars();sitUI()}
 
 // ---- save ----
 $('save').onclick=async()=>{const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}
  const lat=parseFloat($('lat').value),lng=parseFloat($('lng').value);
- await put({id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),fa:$('fa').value.trim(),country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()});ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());
+ await put({id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),fa:$('fa').value.trim(),stars,sit,country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()});ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());
  resetForm();show('list')};
 
 // ---- views ----
@@ -156,7 +165,7 @@ async function renderList(){const A=(await all()).sort((a,b)=>b.created.localeCo
  sel=new Set([...sel].filter(id=>A.some(b=>b.id===id)));shown=A.filter(b=>(!fg.value||b.grade===fg.value)&&(!fs.value||b.sector===fs.value));upd();const el=$('items');
  if(!shown.length){el.innerHTML='<p class="empty">'+(A.length?'No boulders match these filters.':'No boulders logged yet.<br>Tap Add to log your first.')+'</p>';return}
  el.innerHTML='';for(const b of shown){const d=document.createElement('div');d.className='item';
-  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}</div><span class="g">${esc(b.grade)||'?'}</span><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
+  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}</div><span class="g">${esc(b.grade)||'?'}</span><span class="st">${'★'.repeat(b.stars||0)}</span>${b.sit?'<span class="m">Sit start</span>':''}<br><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
   const x=document.createElement('button');x.className='x';x.textContent='Delete';x.onclick=async e=>{e.stopPropagation();if(confirm('Delete "'+b.name+'"? This cannot be undone.')){await del(b.id);renderList()}};d.appendChild(x);
   const ck=document.createElement('label');ck.className='ck';ck.onclick=e=>e.stopPropagation();ck.innerHTML='<input type="checkbox">';const cb=ck.firstChild;cb.checked=sel.has(b.id);cb.onchange=()=>{cb.checked?sel.add(b.id):sel.delete(b.id);upd()};d.insertBefore(ck,d.firstChild);
   d.onclick=()=>detail(b.id);el.appendChild(d);if(b.photo)thumb(d.querySelector('canvas'),b)}}
@@ -189,7 +198,7 @@ async function makePdf(){
   doc.addPage()}
  for(let i=0;i<L.length;i++){const b=L[i];if(i)doc.addPage();
   doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text((i+1)+'. '+b.name,15,22,{maxWidth:150});doc.text(b.grade||'',195,22,{align:'right'});
-  doc.setFont('helvetica','normal').setFontSize(11);doc.text(b.sector||'No sector',15,30);doc.text('First ascent: '+(b.fa||'not recorded')+'   Logged: '+fmt(b.created),15,36);let y=43;
+  doc.setFont('helvetica','normal').setFontSize(11);doc.text(b.sector||'No sector',15,30);doc.text('First ascent: '+(b.fa||'not recorded')+'   Logged: '+fmt(b.created),15,36);doc.text((b.stars||0)+' of 3 stars'+(b.sit?', sit start':''),195,30,{align:'right'});let y=43;
   if(b.photo){const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const k=Math.min(180/c.width,170/c.height),w=c.width*k,h=c.height*k;doc.addImage(c.toDataURL('image/jpeg',.85),'JPEG',(210-w)/2,y,w,h);y+=h+8}
   const t=doc.splitTextToSize(b.desc||'',180).slice(0,18);doc.text(t,15,y);y+=t.length*5+4;
   if(b.lat!=null)doc.text('Coordinates: '+b.lat.toFixed(6)+', '+b.lng.toFixed(6),15,y);
@@ -211,7 +220,7 @@ $('sat').onclick=async()=>{const names=['Map','Satellite'];if(ls.get('gkey'))nam
  try{nl=next===0?osm:next===1?sat:(await gLayer()).layer}catch(e){alert('Google tiles failed ('+e.message+'). Check the key, that Map Tiles API and billing are enabled, and that you are online.');return}
  [osm,sat,gl&&gl.layer].forEach(l=>l&&map.hasLayer(l)&&map.removeLayer(l));nl.addTo(map);li=next;$('sat').textContent=names[(li+1)%names.length];gattr()};
 async function detail(id){const b=(await all()).find(x=>x.id===id);if(!b)return;await show('detail');const el=$('v-detail');
- el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}${b.fa?'<p class="m">First ascent: '+esc(b.fa)+'</p>':''}<p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
+ el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}${b.fa?'<p class="m">First ascent: '+esc(b.fa)+'</p>':''}<p class="m">${'★'.repeat(b.stars||0)}${'☆'.repeat(3-(b.stars||0))}${b.sit?'   Sit start':''}</p><p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
  $('back').onclick=()=>show('list');$('ed').onclick=()=>edit(b);
  $('up').onclick=async()=>{if(!b.photo){alert('This boulder has no photo.');return}if(!await authed())return;const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
   try{await upload((b.sector?b.sector+' - ':'')+b.name+' '+(b.grade||'')+'.jpg',bl,[b.fa&&'First ascent: '+b.fa,b.desc,b.lat!=null&&b.lat+', '+b.lng].filter(Boolean).join('\n'));alert('Uploaded to Drive.')}catch(e){alert('Upload failed ('+e.message+'). Sign in again and retry.');tok=null}};$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
@@ -238,7 +247,7 @@ $('fimp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=
  $('impmsg').textContent=`Imported ${n} new, skipped ${d.items.length-n} already on this phone.`}catch(_){$('impmsg').textContent='That file is not a Boulder Log backup.'}e.target.value=''};
 $('gpx').onclick=async()=>{const A=(await all()).filter(b=>b.lat!=null);if(!A.length){alert('No boulders with coordinates yet.');return}
  await out(new File([`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Boulder Log" xmlns="http://www.topografix.com/GPX/1/1">\n`+A.map(b=>`<wpt lat="${b.lat}" lon="${b.lng}"><name>${esc(b.name)} ${esc(b.grade)}</name><desc>${esc([b.sector,b.desc].filter(Boolean).join(' - '))}</desc></wpt>`).join('\n')+'\n</gpx>'],'boulders.gpx',{type:'application/gpx+xml'}))};
-let tok=null,tokExp=0;const st=m=>{$('drst').textContent=m;$('pdfs').textContent=m};
+let tok=null,tokExp=0;const st=m=>{$('drst').textContent=m;$('pdfs').textContent=m;$('ukcs').textContent=m};
 function gis(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=res;s.onerror=()=>rej(new Error('offline'));document.head.appendChild(s)})}
 async function signIn(){const id=ls.get('cid');if(!id){alert('Open More, paste your Google client ID and tap Save client ID first.');return false}
  if(!navigator.onLine){alert('Go online to sign in.');return false}
@@ -261,6 +270,33 @@ function zip1(name,data){const n=new TextEncoder().encode(name),c=crc32(data),L=
  h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(12,33,true);h.setUint32(14,c,true);h.setUint32(18,L,true);h.setUint32(22,L,true);h.setUint16(26,n.length,true);
  d.setUint32(0,0x02014b50,true);d.setUint16(4,20,true);d.setUint16(6,20,true);d.setUint16(14,33,true);d.setUint32(16,c,true);d.setUint32(20,L,true);d.setUint32(24,L,true);d.setUint16(28,n.length,true);
  e.setUint32(0,0x06054b50,true);e.setUint16(8,1,true);e.setUint16(10,1,true);e.setUint32(12,46+n.length,true);e.setUint32(16,30+n.length+L,true);return new Blob([h,n,data,d,n,e])}
+function zipN(F){const te=new TextEncoder(),parts=[],cd=[];let off=0;
+ for(const[n,d]of Object.entries(F)){const nm=te.encode(n),u=typeof d==='string'?te.encode(d):d,c=crc32(u),L=u.length,hd=new DataView(new ArrayBuffer(30)),e=new DataView(new ArrayBuffer(46));
+  hd.setUint32(0,0x04034b50,true);hd.setUint16(4,20,true);hd.setUint16(12,33,true);hd.setUint32(14,c,true);hd.setUint32(18,L,true);hd.setUint32(22,L,true);hd.setUint16(26,nm.length,true);
+  e.setUint32(0,0x02014b50,true);e.setUint16(4,20,true);e.setUint16(6,20,true);e.setUint16(14,33,true);e.setUint32(16,c,true);e.setUint32(20,L,true);e.setUint32(24,L,true);e.setUint16(28,nm.length,true);e.setUint32(42,off,true);
+  parts.push(hd,nm,u);cd.push(e,nm);off+=30+nm.length+L}
+ const z=new DataView(new ArrayBuffer(22)),n=Object.keys(F).length;z.setUint32(0,0x06054b50,true);z.setUint16(8,n,true);z.setUint16(10,n,true);z.setUint32(12,cd.reduce((a,p)=>a+p.byteLength,0),true);z.setUint32(16,off,true);return new Blob([...parts,...cd,z])}
+const XH='<?xml version="1.0" encoding="UTF-8" standalone="yes"?>',XL='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+function xlsx(rows){const col=i=>String.fromCharCode(65+i),x=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])).replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'');
+ const sd=rows.map((r,i)=>'<row r="'+(i+1)+'">'+r.map((v,j)=>v===''||v==null?'':typeof v==='number'?'<c r="'+col(j)+(i+1)+'"><v>'+v+'</v></c>':'<c r="'+col(j)+(i+1)+'" t="inlineStr"><is><t xml:space="preserve">'+x(v)+'</t></is></c>').join('')+'</row>').join('');
+ const R='http://schemas.openxmlformats.org/officeDocument/2006/relationships',P='http://schemas.openxmlformats.org/package/2006/relationships',S='http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+ return zipN({'[Content_Types].xml':XH+'<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="'+XL+'.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>',
+  '_rels/.rels':XH+'<Relationships xmlns="'+P+'"><Relationship Id="rId1" Type="'+R+'/officeDocument" Target="xl/workbook.xml"/></Relationships>',
+  'xl/workbook.xml':XH+'<workbook xmlns="'+S+'" xmlns:r="'+R+'"><sheets><sheet name="Climbs" sheetId="1" r:id="rId1"/></sheets></workbook>',
+  'xl/_rels/workbook.xml.rels':XH+'<Relationships xmlns="'+P+'"><Relationship Id="rId1" Type="'+R+'/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
+  'xl/worksheets/sheet1.xml':XH+'<worksheet xmlns="'+S+'"><sheetData>'+sd+'</sheetData></worksheet>'})}
+const ukcGrade=g=>{g=(g||'').trim();if(/^[3-9][ABC]?\+?$/i.test(g))return'font '+g.toLowerCase();if(/^V(\d+|B)\+?$/i.test(g))return g.toUpperCase();return g};
+function ukcRows(list,butt){const R=[['CLIMB NAME','GRADE','STARS','DESCRIPTION','FIRST ASCENT','HEIGHT','PITCHES','GRADE TYPE','GRADE SYSTEM','SYMBOLS']],add=b=>R.push([b.name,ukcGrade(b.grade),b.stars||0,b.desc||'',b.fa||'','','','','',b.sit?'10':'']);
+ if(butt){const g=new Map();list.forEach(b=>{const k=b.sector||'No sector';g.set(k,[...(g.get(k)||[]),b])});g.forEach((v,k)=>{R.push([k]);v.forEach(add)})}else list.forEach(add);return R}
+async function ukcFile(){const S=[...pdfSet()].sort((a,b)=>a.created.localeCompare(b.created)),safe=s=>s.replace(/[\\\/:*?"<>|]+/g,'-'),nm=k=>'UKC missing climbs - '+safe(k)+'.xlsx';
+ if($('ukclvl').value==='r')return new File([xlsx(ukcRows(S,true))],nm([...new Set(S.map(b=>b.region).filter(Boolean))].join(' & ')||'Boulders'),{type:XL});
+ const g=new Map();S.forEach(b=>{const k=b.sector||'No sector';g.set(k,[...(g.get(k)||[]),b])});
+ if(g.size===1){const[k,v]=[...g][0];return new File([xlsx(ukcRows(v,false))],nm(k),{type:XL})}
+ const F={};for(const[k,v]of g)F[nm(k)]=new Uint8Array(await xlsx(ukcRows(v,false)).arrayBuffer());return new File([zipN(F)],'UKC upload files.zip',{type:'application/zip'})}
+$('ukc').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}const S=pdfSet(),mg=S.filter(b=>!b.grade).length;$('ukcs').textContent=S.length+' problem'+(S.length==1?'':'s')+(mg?'. '+mg+' have no grade, which UKC requires.':'.');$('ukcopt').hidden=false};
+$('ukcx').onclick=()=>{$('ukcopt').hidden=true};$('ukcsign').onclick=()=>signIn();
+$('ukcphone').onclick=async()=>{const f=await ukcFile();dlf(f);$('ukcs').textContent='Saved '+f.name+' to your phone.'};
+$('ukcdrive').onclick=async()=>{if(!await authed())return;const f=await ukcFile();$('ukcs').textContent='Uploading to Drive…';try{await upload(f.name,f,'UKC missing climbs upload file');$('ukcs').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('ukcs').textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}};
 $('kmz').onclick=async()=>{const A=(await all()).filter(b=>b.lat!=null);if(!A.length){alert('No boulders with coordinates yet.');return}
  const kml='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Boulder Log</name>'+A.map(b=>`<Placemark><name>${esc(b.name)} ${esc(b.grade)}</name><description>${esc([b.sector,b.desc].filter(Boolean).join(' - '))}</description><Point><coordinates>${b.lng},${b.lat},0</coordinates></Point></Placemark>`).join('')+'</Document></kml>';
  await out(new File([zip1('doc.kml',new TextEncoder().encode(kml))],'boulders.kmz',{type:'application/vnd.google-earth.kmz'}))};
