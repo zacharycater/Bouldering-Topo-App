@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#232826"><link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png"><title>Boulder Log</title>
+<link rel="icon" href="icon-192.png"><title>Boulder Logger</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
 :root{--ink:#232826;--paper:#eef0ea;--card:#fff;--mute:#677069;--line:#d3d7cf;--acc:#3e6b48;--acc-t:#fff;--red:#e5382b}
@@ -31,19 +31,26 @@ button.s{background:none;color:var(--ink);border-color:var(--line)}button.d{back
 button.p.full{width:100%;padding:15px;margin-top:20px}
 canvas.topo{max-width:100%;max-height:58vh;width:auto;border-radius:10px;touch-action:pan-y;display:block;margin:10px auto 0;background:var(--line)}canvas.topo.dr{touch-action:none;outline:3px solid var(--red)}
 #v-detail h2{margin:12px 0 4px}
-h3{margin:22px 0 6px;font-size:16px}#v-more button{display:block;width:100%}#v-more .row button{width:auto}
+h3{margin:22px 0 6px;font-size:16px}
+.sec{font-weight:600;color:var(--acc);margin:1px 0 5px}
+#sugg{border:1px solid var(--line);border-radius:8px;background:var(--card);margin-top:4px;max-height:220px;overflow:auto}#sugg div{padding:12px;border-bottom:1px solid var(--line)}#sugg div:last-child{border:0}
+.ck{display:flex;align-items:center;padding:0 0 0 12px;margin:0}.ck input,#selall,#pdfmap{width:24px;height:24px;padding:0;margin:0;accent-color:var(--acc)}
+.item .x{align-self:center;margin:0 10px 0 auto;padding:8px 10px;border:1px solid var(--red);color:var(--red);background:none;border-radius:8px;font:600 13px system-ui}
+#pdfopt{position:fixed;inset:0;background:#0007;z-index:4000;display:flex;align-items:flex-end}#pdfopt[hidden]{display:none}
+.sheet{background:var(--card);width:100%;padding:16px 16px calc(16px + env(safe-area-inset-bottom));border-radius:14px 14px 0 0}.sheet button{display:block;width:100%}#v-more button{display:block;width:100%}#v-more .row button{width:auto}
 .bar{display:flex;gap:8px;margin-bottom:12px}.bar select{flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}.bar button{margin:0}
 #v-map{position:relative}#mapbar{position:absolute;top:10px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:6px;align-items:flex-end}#mapbar button{margin:0;box-shadow:0 1px 4px #0006}#mapbar span{background:var(--card);color:var(--ink);padding:4px 8px;border-radius:6px;font-size:13px}
 #upd{display:none;position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:3000;background:var(--ink);color:var(--paper);padding:13px 14px;border-radius:10px;font-weight:700;text-align:center}
 </style></head><body>
-<header><h1 id="ttl">Boulders</h1><span id="net"></span></header>
+<header><h1 id="ttl">Boulder Logger</h1><span id="net"></span></header>
 <main>
-<section id="v-list"><div class="bar"><select id="fg"></select><button class="s" id="pdf" type="button">Export PDF</button></div><div id="items"></div></section>
-<section id="v-map"><div id="map"></div><div id="mapbar"><button class="p" id="sat" type="button">Satellite</button><span>Tiles you view are kept for offline use</span></div></section>
+<section id="v-list"><div class="bar"><select id="fs"></select><select id="fg"></select></div><div class="bar"><button class="s" id="pdf" type="button" style="flex:1">Export PDF</button></div><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="selall">Select all shown</label><div id="items"></div></section>
+<section id="v-map"><div id="map"></div><div id="mapbar"><button class="p" id="sat" type="button">Satellite</button><span>Tiles you view are kept for offline use</span></div><div id="gattr" hidden style="position:absolute;left:6px;bottom:6px;z-index:1000;background:#fffc;padding:2px 6px;font-size:11px;border-radius:4px;color:#000"></div></section>
 <section id="v-add">
  <label>Problem name</label><input id="name" placeholder="Proposed name" autocomplete="off">
  <label>First ascent</label><input id="fa" value="Zach Cater" autocomplete="off">
- <label>Sector (optional)</label><input id="sector" placeholder="e.g. Hemakuta Hill" autocomplete="off"><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
+ <div class="row"><div><label>Country</label><input id="country" value="India" autocomplete="off"></div><div><label>Region</label><input id="region" value="Hampi" autocomplete="off"></div></div>
+ <label>Sector (optional)</label><input id="sector" placeholder="e.g. Hemakuta Hill" autocomplete="off"><div id="sugg" hidden></div><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
  <label>Photo</label>
  <div class="row"><button class="p" id="cam" type="button">Take photo</button><button class="s" id="gal" type="button">Choose photo</button></div>
  <input id="fcam" type="file" accept="image/*" capture="environment" hidden><input id="fgal" type="file" accept="image/*" hidden>
@@ -64,19 +71,22 @@ h3{margin:22px 0 6px;font-size:16px}#v-more button{display:block;width:100%}#v-m
 <section id="v-more">
  <h3 style="margin-top:0">Backup</h3><p class="m" id="bkst"></p>
  <button class="p" id="mkbk" type="button">Create backup file</button>
- <div id="bkout" hidden><div class="row"><button class="p" id="bkshare" type="button">Share to Drive…</button><button class="s" id="bkdl" type="button">Save to phone</button></div></div>
+ <div id="bkout" hidden><div class="row"><button class="p" id="bkshare" type="button">Upload to Drive</button><button class="s" id="bkdl" type="button">Save to phone</button></div></div>
  <button class="s" id="imp" type="button" style="margin-top:12px">Import backup file</button><input id="fimp" type="file" accept=".json,application/json" hidden><p class="m" id="impmsg"></p>
  <h3>Google Drive</h3><p class="m" id="drst">Paste your own Google client ID, save it, then sign in. The app can only see files it creates itself.</p>
  <input id="cid" placeholder="Client ID ending .apps.googleusercontent.com" autocomplete="off">
  <button class="s" id="cidsave" type="button" style="margin-top:8px">Save client ID</button>
  <button class="p" id="drsign" type="button" style="margin-top:8px">Sign in to Google Drive</button>
  <button class="s" id="drup" type="button" style="margin-top:8px">Back up to Drive now</button>
- <h3>Offline map pins</h3><p class="m">Save your boulder pins as a GPX file and open it in an offline maps app such as Organic Maps or OsmAnd.</p>
- <button class="s" id="gpx" type="button">Export pins as GPX</button>
+ <h3>Export pins</h3><p class="m">GPX opens in offline maps apps such as Organic Maps or OsmAnd. KMZ opens in Google Earth or Google My Maps.</p>
+ <div class="row"><button class="s" id="gpx" type="button">Export GPX</button><button class="s" id="kmz" type="button">Export KMZ</button></div>
  <h3>MapTiler key (optional)</h3><p class="m">Your own key. It stays on this phone and switches Satellite to MapTiler imagery.</p>
  <input id="mtk" placeholder="Paste key" autocomplete="off"><button class="s" id="mtsave" type="button" style="margin-top:8px">Save key</button>
+ <h3>Google Maps key (optional)</h3><p class="m">Your own key with the Map Tiles API enabled and billing on. It stays on this phone. Adds a Google satellite option on the map, online only.</p>
+ <input id="gk" placeholder="Paste key" autocomplete="off"><button class="s" id="gksave" type="button" style="margin-top:8px">Save key</button>
 </section>
 </main>
+<div id="pdfopt" hidden><div class="sheet"><b>Export PDF</b><p class="m" id="pdfs"></p><label style="margin-top:0">File name</label><input id="pdfname" autocomplete="off" style="margin-bottom:10px"><label style="margin-top:0">Region and country (under the title)</label><input id="pdfreg" autocomplete="off" placeholder="e.g. Hampi, India" style="margin-bottom:10px"><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="pdfmap" checked>Include map page</label><button class="p" id="pdfphone" type="button">Save to phone</button><button class="p" id="pdfdrive" type="button">Upload to Google Drive</button><button class="s" id="pdfsign" type="button">Sign in to Google Drive</button><button class="s" id="pdfx" type="button">Close</button></div></div>
 <div id="upd">New version ready. Tap to reload.</div>
 <nav><button data-v="list" class="on">Topos</button><button data-v="map">Map</button><button data-v="add">Add</button><button data-v="more">More</button></nav>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -121,60 +131,99 @@ function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS
  ()=>{m.textContent='No GPS fix. Enter coordinates by hand or try again outside.'},{enableHighAccuracy:true,timeout:25000,maximumAge:20000})}
 $('regps').onclick=gps;
 let editing=null;
-function resetForm(){editing=null;['name','sector','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder'}
+function resetForm(){editing=null;['name','sector','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder'}
 $('cancel').onclick=()=>{resetForm();show('list')};
-async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('fa').value=b.fa??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;draw(cv,bm,strokes)}$('cancel').hidden=false;$('save').textContent='Save changes'}
+async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('fa').value=b.fa??'';$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;draw(cv,bm,strokes)}$('cancel').hidden=false;$('save').textContent='Save changes'}
 
 // ---- save ----
 $('save').onclick=async()=>{const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}
  const lat=parseFloat($('lat').value),lng=parseFloat($('lng').value);
- await put({id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),fa:$('fa').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()});
+ await put({id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),fa:$('fa').value.trim(),country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()});ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());
  resetForm();show('list')};
 
 // ---- views ----
 const T={list:'Boulders',map:'Map',add:'New boulder',detail:'Boulder',more:'More'};let map,layer;
 async function show(v){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
- document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===(v==='detail'?'list':v)));$('ttl').textContent=v==='add'&&editing?'Edit boulder':T[v];
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===(v==='detail'?'list':v)));$('ttl').textContent='Boulder Logger';
  if(v==='list')await renderList();if(v==='map')await renderMap();if(v==='more')await renderMore();if(v==='add'&&!editing){if(!$('when').value)setWhen();if(!$('lat').value)gps()}}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='add'&&editing)resetForm();show(b.dataset.v)});
 async function thumb(cv,b){const m=await createImageBitmap(b.photo);const k=184/Math.min(m.width,m.height);const t=document.createElement('canvas');draw(t,m,b.strokes);cv.width=cv.height=184;cv.getContext('2d').drawImage(t,(t.width-184/k)/2,(t.height-184/k)/2,184/k,184/k,0,0,184,184)}
-let shown=[];
-async function renderList(){const A=(await all()).sort((a,b)=>b.created.localeCompare(a.created)),fg=$('fg'),sel=fg.value,gs=[...new Set(A.map(b=>b.grade).filter(Boolean))].sort();
- fg.innerHTML='<option value="">All grades</option>'+gs.map(g=>`<option>${esc(g)}</option>`).join('');fg.value=gs.includes(sel)?sel:'';
- shown=A.filter(b=>!fg.value||b.grade===fg.value);const el=$('items');
- if(!shown.length){el.innerHTML='<p class="empty">'+(A.length?'No boulders at this grade.':'No boulders logged yet.<br>Tap Add to log your first.')+'</p>';return}
+let shown=[],sel=new Set();
+async function renderList(){const A=(await all()).sort((a,b)=>b.created.localeCompare(a.created)),fg=$('fg'),fs=$('fs'),pg=fg.value,ps=fs.value,
+ gs=[...new Set(A.map(b=>b.grade).filter(Boolean))].sort(),ss=[...new Set(A.map(b=>b.sector).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
+ fg.innerHTML='<option value="">All grades</option>'+gs.map(g=>`<option>${esc(g)}</option>`).join('');fg.value=gs.includes(pg)?pg:'';
+ fs.innerHTML='<option value="">All sectors</option>'+ss.map(g=>`<option>${esc(g)}</option>`).join('');fs.value=ss.includes(ps)?ps:'';
+ sel=new Set([...sel].filter(id=>A.some(b=>b.id===id)));shown=A.filter(b=>(!fg.value||b.grade===fg.value)&&(!fs.value||b.sector===fs.value));upd();const el=$('items');
+ if(!shown.length){el.innerHTML='<p class="empty">'+(A.length?'No boulders match these filters.':'No boulders logged yet.<br>Tap Add to log your first.')+'</p>';return}
  el.innerHTML='';for(const b of shown){const d=document.createElement('div');d.className='item';
-  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><span class="g">${esc(b.grade)||'?'}</span>${b.sector?'<div class="m">'+esc(b.sector)+'</div>':''}<div class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</div></div>`;
+  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}</div><span class="g">${esc(b.grade)||'?'}</span><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
+  const x=document.createElement('button');x.className='x';x.textContent='Delete';x.onclick=async e=>{e.stopPropagation();if(confirm('Delete "'+b.name+'"? This cannot be undone.')){await del(b.id);renderList()}};d.appendChild(x);
+  const ck=document.createElement('label');ck.className='ck';ck.onclick=e=>e.stopPropagation();ck.innerHTML='<input type="checkbox">';const cb=ck.firstChild;cb.checked=sel.has(b.id);cb.onchange=()=>{cb.checked?sel.add(b.id):sel.delete(b.id);upd()};d.insertBefore(ck,d.firstChild);
   d.onclick=()=>detail(b.id);el.appendChild(d);if(b.photo)thumb(d.querySelector('canvas'),b)}}
-$('fg').onchange=renderList;
-$('pdf').onclick=async()=>{if(!shown.length){alert('Nothing to export.');return}
+$('fg').onchange=renderList;$('fs').onchange=renderList;
+function upd(){const n=shown.filter(b=>sel.has(b.id)).length;$('selall').checked=shown.length>0&&n===shown.length;$('pdf').textContent=n?`Export PDF (${n})`:'Export PDF'}
+$('selall').onchange=()=>{shown.forEach(b=>$('selall').checked?sel.add(b.id):sel.delete(b.id));renderList()};
+const pdfSet=()=>{const s=shown.filter(b=>sel.has(b.id));return s.length?s:shown};
+const mx=(g,z)=>(g+180)/360*2**z*256,my=(a,z)=>{const r=a*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*2**z*256};
+async function coverMap(pins){const W=1100,H=1000,c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+ const la=pins.map(p=>p.lat),lo=pins.map(p=>p.lng),la0=Math.min(...la),la1=Math.max(...la),lo0=Math.min(...lo),lo1=Math.max(...lo);
+ let z=17;for(;z>2;z--){if(mx(lo1,z)-mx(lo0,z)<=W*.8&&my(la0,z)-my(la1,z)<=H*.8)break}
+ const n=2**z,tlx=(mx(lo0,z)+mx(lo1,z))/2-W/2,tly=(my(la0,z)+my(la1,z))/2-H/2;x.fillStyle='#e9ece6';x.fillRect(0,0,W,H);
+ const jobs=[];for(let tx=Math.floor(tlx/256);tx<=Math.floor((tlx+W)/256);tx++)for(let ty=Math.floor(tly/256);ty<=Math.floor((tly+H)/256);ty++)if(ty>=0&&ty<n)jobs.push([tx,ty]);
+ let ok=0;for(let i=0;i<jobs.length;i+=6)await Promise.all(jobs.slice(i,i+6).map(async([tx,ty])=>{try{const r=await fetch(OSM.replace('{z}',z).replace('{x}',((tx%n)+n)%n).replace('{y}',ty),{mode:'cors'});if(!r.ok)return;x.drawImage(await createImageBitmap(await r.blob()),tx*256-tlx,ty*256-tly);ok++}catch(_){}}));
+ const mpp=40075016.686*Math.cos((la0+la1)/2*Math.PI/180)/(256*n),len=[10,20,50,100,200,500,1000,2000,5000,10000,20000,50000,100000,200000,500000,1000000].filter(v=>v/mpp<=W/4).pop()||10,bw=len/mpp;
+ x.fillStyle='#fffc';x.fillRect(16,H-58,bw+24,42);x.fillStyle='#000';x.fillRect(28,H-30,bw,4);x.font='22px sans-serif';x.textAlign='left';x.fillText(len>=1000?len/1000+' km':len+' m',28,H-38);
+ x.fillStyle='#fffc';x.fillRect(W-330,H-34,330,34);x.fillStyle='#000';x.font='18px sans-serif';x.textAlign='right';x.fillText('© OpenStreetMap contributors',W-10,H-11);
+ for(const p of pins){const px=mx(p.lng,z)-tlx,py=my(p.lat,z)-tly;x.beginPath();x.arc(px,py,22,0,7);x.fillStyle='#e5382b';x.fill();x.lineWidth=4;x.strokeStyle='#fff';x.stroke();x.fillStyle='#fff';x.font='bold 24px sans-serif';x.textAlign='center';x.textBaseline='middle';x.fillText(p.n,px,py+1)}
+ return{img:c.toDataURL('image/jpeg',.85),ok,W,H}}
+async function makePdf(){
  if(!window.jspdf){alert('PDF tool not loaded. Open the app once with a connection.');return}
- const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),L=[...shown].sort((a,b)=>(a.sector||'').localeCompare(b.sector||'')||a.name.localeCompare(b.name));
+ const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),L=[...pdfSet()].sort((a,b)=>(a.sector||'').localeCompare(b.sector||'')||a.name.localeCompare(b.name));
+ if($('pdfmap').checked){const pins=L.map((b,i)=>({n:i+1,lat:b.lat,lng:b.lng})).filter(p=>p.lat!=null);
+  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);const ts=doc.splitTextToSize([...new Set(L.map(b=>b.sector).filter(Boolean))].sort().join(', ')||'Boulders',180),tl=ts.slice(0,2);if(ts.length>2)tl[1]+='…';doc.text(tl,15,20);
+  const ty=20+(tl.length-1)*8,region=$('pdfreg').value.trim();ls.set('region',region);if(region){doc.setFont('helvetica','normal').setFontSize(13).setTextColor(60);doc.text(region,15,ty+7)}
+  doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90);doc.text(L.length+' boulder'+(L.length==1?'':'s')+', '+new Date().toLocaleDateString('en-GB'),15,ty+13);let y=ty+19;
+  if(pins.length){const m=await coverMap(pins),w=180,h=w*m.H/m.W;doc.addImage(m.img,'JPEG',15,y,w,h);y+=h+5;if(!m.ok){doc.setFontSize(9);doc.text('Base map unavailable offline. Pins are plotted by coordinates only.',15,y);y+=5}}
+  doc.setFontSize(10).setTextColor(0);const y0=y+3,per=Math.max(1,Math.floor((282-y0)/5));
+  L.forEach((b,i)=>{if(i&&i%(2*per)===0)doc.addPage();const pg=Math.floor(i/(2*per)),col=Math.floor(i/per)%2,row=i%per;doc.text((i+1)+'. '+b.name+(b.grade?' ('+b.grade+')':'')+(b.lat==null?' (no pin)':''),15+col*95,(pg?20:y0)+row*5,{maxWidth:90})});
+  doc.addPage()}
  for(let i=0;i<L.length;i++){const b=L[i];if(i)doc.addPage();
-  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text(b.name,15,22,{maxWidth:150});doc.text(b.grade||'',195,22,{align:'right'});
+  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text((i+1)+'. '+b.name,15,22,{maxWidth:150});doc.text(b.grade||'',195,22,{align:'right'});
   doc.setFont('helvetica','normal').setFontSize(11);doc.text(b.sector||'No sector',15,30);doc.text('First ascent: '+(b.fa||'not recorded')+'   Logged: '+fmt(b.created),15,36);let y=43;
   if(b.photo){const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const k=Math.min(180/c.width,170/c.height),w=c.width*k,h=c.height*k;doc.addImage(c.toDataURL('image/jpeg',.85),'JPEG',(210-w)/2,y,w,h);y+=h+8}
   const t=doc.splitTextToSize(b.desc||'',180).slice(0,18);doc.text(t,15,y);y+=t.length*5+4;
   if(b.lat!=null)doc.text('Coordinates: '+b.lat.toFixed(6)+', '+b.lng.toFixed(6),15,y);
   doc.setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288);doc.text((i+1)+' / '+L.length,195,288,{align:'right'})}
- doc.save('boulder-topos.pdf')};
+ return doc.output('blob')}
 const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png',SAT='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';const MT='https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=';let osm,sat,isSat=false;function setSat(){const k=ls.get('mtkey');sat.setUrl(k?MT+k:SAT);sat.options.maxNativeZoom=k?19:17}
 async function renderMap(){if(!map){map=L.map('map').setView([15.335,76.46],13);
-  osm=L.tileLayer(OSM,{maxZoom:19,crossOrigin:true,attribution:'© OpenStreetMap contributors'}).addTo(map);sat=L.tileLayer(SAT,{maxZoom:19,maxNativeZoom:17,crossOrigin:true,attribution:'Imagery © Esri / MapTiler'});setSat();layer=L.layerGroup().addTo(map)}
+  osm=L.tileLayer(OSM,{maxZoom:19,crossOrigin:true,attribution:'© OpenStreetMap contributors'}).addTo(map);sat=L.tileLayer(SAT,{maxZoom:19,maxNativeZoom:17,crossOrigin:true,attribution:'Imagery © Esri / MapTiler'});setSat();layer=L.layerGroup().addTo(map);map.on('moveend',gattr)}
  setTimeout(()=>map.invalidateSize(),50);layer.clearLayers();const pts=[];
  for(const b of await all()){if(b.lat==null)continue;pts.push([b.lat,b.lng]);
   const m=L.circleMarker([b.lat,b.lng],{radius:10,color:'#fff',weight:2,fillColor:'#e5382b',fillOpacity:1}).addTo(layer);
   const p=document.createElement('div');p.innerHTML=`<b>${esc(b.name)}</b> ${esc(b.grade)}<br>`;const a=document.createElement('a');a.href='#';a.textContent='Open topo';a.onclick=e=>{e.preventDefault();detail(b.id)};p.appendChild(a);m.bindPopup(p)}
  if(pts.length)map.fitBounds(pts,{padding:[40,40],maxZoom:17})}
-$('sat').onclick=()=>{isSat=!isSat;if(isSat){map.removeLayer(osm);sat.addTo(map)}else{map.removeLayer(sat);osm.addTo(map)}$('sat').textContent=isSat?'Map':'Satellite'};
+let li=0,gl=null;
+async function gLayer(){const k=ls.get('gkey');if(gl&&gl.k===k)return gl;const r=await fetch('https://tile.googleapis.com/v1/createSession?key='+k,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({mapType:'satellite',language:'en-GB',region:'IN'})});if(!r.ok)throw new Error(r.status);const s=await r.json();
+ gl={s:s.session,k,layer:L.tileLayer('https://tile.googleapis.com/v1/2dtiles/{z}/{x}/{y}?session='+s.session+'&key='+k,{maxZoom:20})};return gl}
+async function gattr(){const el=$('gattr');if(li!==2||!gl){el.hidden=true;return}el.hidden=false;try{const b=map.getBounds(),r=await fetch(`https://tile.googleapis.com/tile/v1/viewport?session=${gl.s}&key=${gl.k}&zoom=${map.getZoom()}&north=${b.getNorth()}&south=${b.getSouth()}&east=${b.getEast()}&west=${b.getWest()}`);el.textContent=(await r.json()).copyright||'Map data © Google'}catch(_){el.textContent='Map data © Google'}}
+$('sat').onclick=async()=>{const names=['Map','Satellite'];if(ls.get('gkey'))names.push('Google');const next=(li+1)%names.length;let nl;
+ try{nl=next===0?osm:next===1?sat:(await gLayer()).layer}catch(e){alert('Google tiles failed ('+e.message+'). Check the key, that Map Tiles API and billing are enabled, and that you are online.');return}
+ [osm,sat,gl&&gl.layer].forEach(l=>l&&map.hasLayer(l)&&map.removeLayer(l));nl.addTo(map);li=next;$('sat').textContent=names[(li+1)%names.length];gattr()};
 async function detail(id){const b=(await all()).find(x=>x.id===id);if(!b)return;await show('detail');const el=$('v-detail');
- el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${b.sector?'<p class="m">Sector: '+esc(b.sector)+'</p>':''}${b.fa?'<p class="m">First ascent: '+esc(b.fa)+'</p>':''}<p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
+ el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}${b.fa?'<p class="m">First ascent: '+esc(b.fa)+'</p>':''}<p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
  $('back').onclick=()=>show('list');$('ed').onclick=()=>edit(b);
  $('up').onclick=async()=>{if(!b.photo){alert('This boulder has no photo.');return}if(!await authed())return;const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
   try{await upload((b.sector?b.sector+' - ':'')+b.name+' '+(b.grade||'')+'.jpg',bl,[b.fa&&'First ascent: '+b.fa,b.desc,b.lat!=null&&b.lat+', '+b.lng].filter(Boolean).join('\n'));alert('Uploaded to Drive.')}catch(e){alert('Upload failed ('+e.message+'). Sign in again and retry.');tok=null}};$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
  if(b.photo)draw($('dc'),await createImageBitmap(b.photo),b.strokes)}
+let secs=[];
+async function loadSecs(){secs=[...new Set((await all()).filter(b=>!b.region||b.region.toLowerCase()===$('region').value.trim().toLowerCase()).map(b=>b.sector).filter(Boolean))].sort((a,b)=>a.localeCompare(b))}
+function sugg(){const q=$('sector').value.trim().toLowerCase(),sg=$('sugg'),m=secs.filter(s=>s.toLowerCase()!==q&&(!q||s.toLowerCase().includes(q))).sort((a,b)=>(b.toLowerCase().startsWith(q)-a.toLowerCase().startsWith(q))||a.localeCompare(b));
+ sg.innerHTML='';m.slice(0,8).forEach(s=>{const d=document.createElement('div');d.textContent=s;d.onclick=()=>{$('sector').value=s;sg.hidden=true};sg.appendChild(d)});sg.hidden=!m.length}
+$('sector').oninput=sugg;$('sector').onfocus=async()=>{await loadSecs();sugg()};
+$('sector').onblur=()=>setTimeout(()=>{$('sugg').hidden=true;const m=secs.find(s=>s.toLowerCase()===$('sector').value.trim().toLowerCase());if(m)$('sector').value=m},250);
 async function renderMore(){const A=await all(),t=+ls.get('lastbk')||0,n=A.filter(b=>new Date(b.created)>t).length;
- $('bkst').textContent=t?`Last backup: ${fmt(t)}. ${n} boulder${n==1?'':'s'} logged since.`:`No backup yet. ${A.length} boulder${A.length==1?'':'s'} stored on this phone only.`;$('mtk').value=ls.get('mtkey')||'';$('cid').value=ls.get('cid')||'';if(ls.get('cid')&&navigator.onLine)gis().catch(()=>{})}
+ $('bkst').textContent=t?`Last backup: ${fmt(t)}. ${n} boulder${n==1?'':'s'} logged since.`:`No backup yet. ${A.length} boulder${A.length==1?'':'s'} stored on this phone only.`;$('mtk').value=ls.get('mtkey')||'';$('cid').value=ls.get('cid')||'';$('gk').value=ls.get('gkey')||'';if(ls.get('cid')&&navigator.onLine)gis().catch(()=>{})}
 let bk=null;const mark=()=>{ls.set('lastbk',Date.now());renderMore()};
 function dlf(f){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
 async function out(f){try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return true}}catch(e){if(e.name==='AbortError')return false}dlf(f);return true}
@@ -182,21 +231,21 @@ $('mkbk').onclick=async()=>{$('bkst').textContent='Preparing backup…';const it
  for(const b of await all())items.push({...b,photo:b.photo?await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b.photo)}):null});
  bk=new File([JSON.stringify({app:'boulderlog',v:1,exported:new Date().toISOString(),items})],'boulderlog-backup-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json',{type:'application/json'});
  $('bkout').hidden=false;$('bkst').textContent=`Backup ready: ${items.length} boulders, ${(bk.size/1048576).toFixed(1)} MB.`};
-$('bkshare').onclick=async()=>{if(bk&&await out(bk))mark()};$('bkdl').onclick=()=>{if(bk){dlf(bk);mark()}};
+$('bkshare').onclick=async()=>{if(!bk||!await authed())return;$('bkst').textContent='Uploading to Drive…';try{const f=await upload(bk.name,bk,'Boulder Log backup');mark();$('bkst').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('bkst').textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}};$('bkdl').onclick=()=>{if(bk){dlf(bk);mark()}};
 $('imp').onclick=()=>$('fimp').click();
 $('fimp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.app!=='boulderlog'||!Array.isArray(d.items))throw 0;
  const have=new Set((await all()).map(b=>b.id));let n=0;for(const b of d.items){if(have.has(b.id))continue;if(b.photo)b.photo=await(await fetch(b.photo)).blob();await put(b);n++}
  $('impmsg').textContent=`Imported ${n} new, skipped ${d.items.length-n} already on this phone.`}catch(_){$('impmsg').textContent='That file is not a Boulder Log backup.'}e.target.value=''};
 $('gpx').onclick=async()=>{const A=(await all()).filter(b=>b.lat!=null);if(!A.length){alert('No boulders with coordinates yet.');return}
  await out(new File([`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Boulder Log" xmlns="http://www.topografix.com/GPX/1/1">\n`+A.map(b=>`<wpt lat="${b.lat}" lon="${b.lng}"><name>${esc(b.name)} ${esc(b.grade)}</name><desc>${esc([b.sector,b.desc].filter(Boolean).join(' - '))}</desc></wpt>`).join('\n')+'\n</gpx>'],'boulders.gpx',{type:'application/gpx+xml'}))};
-let tok=null,tokExp=0;
+let tok=null,tokExp=0;const st=m=>{$('drst').textContent=m;$('pdfs').textContent=m};
 function gis(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=res;s.onerror=()=>rej(new Error('offline'));document.head.appendChild(s)})}
-async function signIn(){const id=ls.get('cid');if(!id){alert('Paste your Google client ID and tap Save first.');return false}
+async function signIn(){const id=ls.get('cid');if(!id){alert('Open More, paste your Google client ID and tap Save client ID first.');return false}
  if(!navigator.onLine){alert('Go online to sign in.');return false}
  try{await gis()}catch(_){alert('Could not reach Google.');return false}
  return new Promise(res=>google.accounts.oauth2.initTokenClient({client_id:id,scope:'https://www.googleapis.com/auth/drive.file',
-  callback:r=>{if(r.error){$('drst').textContent='Sign-in failed: '+r.error;res(false);return}tok=r.access_token;tokExp=Date.now()+(r.expires_in-60)*1000;$('drst').textContent='Signed in to Google Drive.';res(true)},
-  error_callback:e=>{$('drst').textContent='Sign-in cancelled or blocked ('+(e.type||'error')+').';res(false)}}).requestAccessToken())}
+  callback:r=>{if(r.error){st('Sign-in failed: '+r.error);res(false);return}tok=r.access_token;tokExp=Date.now()+(r.expires_in-60)*1000;st('Signed in to Google Drive.');res(true)},
+  error_callback:e=>{st('Sign-in cancelled or blocked ('+(e.type||'error')+').');res(false)}}).requestAccessToken())}
 const authed=async()=>tok&&Date.now()<tokExp?true:signIn();
 async function dapi(url,o){const r=await fetch(url,{...o,headers:{...(o&&o.headers),Authorization:'Bearer '+tok}});if(!r.ok)throw new Error(r.status);return r.json()}
 async function folder(){const id=ls.get('drfolder');if(id){try{const f=await dapi('https://www.googleapis.com/drive/v3/files/'+id+'?fields=id,trashed');if(!f.trashed)return id}catch(_){}}
@@ -207,6 +256,22 @@ $('cidsave').onclick=()=>{ls.set('cid',$('cid').value.trim());ls.set('drfolder',
 $('drsign').onclick=()=>signIn();
 $('drup').onclick=async()=>{if(!await authed())return;await $('mkbk').onclick();$('drst').textContent='Uploading to Drive…';
  try{const f=await upload(bk.name,bk,'Boulder Log backup');mark();$('drst').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('drst').textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}};
+function crc32(u){const t=crc32.t||(crc32.t=Array.from({length:256},(_,n)=>{let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;return c>>>0}));let r=-1;for(const b of u)r=t[(r^b)&255]^(r>>>8);return(r^-1)>>>0}
+function zip1(name,data){const n=new TextEncoder().encode(name),c=crc32(data),L=data.length,h=new DataView(new ArrayBuffer(30)),d=new DataView(new ArrayBuffer(46)),e=new DataView(new ArrayBuffer(22));
+ h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(12,33,true);h.setUint32(14,c,true);h.setUint32(18,L,true);h.setUint32(22,L,true);h.setUint16(26,n.length,true);
+ d.setUint32(0,0x02014b50,true);d.setUint16(4,20,true);d.setUint16(6,20,true);d.setUint16(14,33,true);d.setUint32(16,c,true);d.setUint32(20,L,true);d.setUint32(24,L,true);d.setUint16(28,n.length,true);
+ e.setUint32(0,0x06054b50,true);e.setUint16(8,1,true);e.setUint16(10,1,true);e.setUint32(12,46+n.length,true);e.setUint32(16,30+n.length+L,true);return new Blob([h,n,data,d,n,e])}
+$('kmz').onclick=async()=>{const A=(await all()).filter(b=>b.lat!=null);if(!A.length){alert('No boulders with coordinates yet.');return}
+ const kml='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Boulder Log</name>'+A.map(b=>`<Placemark><name>${esc(b.name)} ${esc(b.grade)}</name><description>${esc([b.sector,b.desc].filter(Boolean).join(' - '))}</description><Point><coordinates>${b.lng},${b.lat},0</coordinates></Point></Placemark>`).join('')+'</Document></kml>';
+ await out(new File([zip1('doc.kml',new TextEncoder().encode(kml))],'boulders.kmz',{type:'application/vnd.google-earth.kmz'}))};
+$('gksave').onclick=()=>{ls.set('gkey',$('gk').value.trim());gl=null;alert('Saved. Google appears in the map layer button.')};
+$('pdf').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}const n=pdfSet().length;$('pdfs').textContent=n+' boulder'+(n==1?'':'s')+' in this PDF.';$('pdfname').value='Boulder topos '+new Date().toISOString().slice(0,10);const rs=[...new Set(pdfSet().map(b=>b.region&&b.country?b.region+', '+b.country:'').filter(Boolean))];$('pdfreg').value=rs.length?rs.join(' / '):(ls.get('region')||'Hampi, India');$('pdfopt').hidden=false};
+$('pdfx').onclick=()=>{$('pdfopt').hidden=true};$('pdfsign').onclick=()=>signIn();
+async function pdfOut(drive){const s=$('pdfs');if(drive&&!await authed())return;s.textContent='Building PDF…';const bl=await makePdf();if(!bl){s.textContent='';return}
+ const name=($('pdfname').value.trim().replace(/\.pdf$/i,'').replace(/[\\\/:*?"<>|]+/g,'-')||'Boulder topos')+'.pdf';
+ if(!drive){dlf(new File([bl],name,{type:'application/pdf'}));s.textContent='Saved to your phone downloads.';return}
+ s.textContent='Uploading to Drive…';try{await upload(name,bl,'Boulder Log topos');s.textContent='Uploaded '+name+' to the Boulder Log folder in Drive.'}catch(e){s.textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}}
+$('pdfphone').onclick=()=>pdfOut(false);$('pdfdrive').onclick=()=>pdfOut(true);
 $('mtsave').onclick=()=>{ls.set('mtkey',$('mtk').value.trim());if(sat)setSat();alert('Saved. Satellite now uses MapTiler.')};
 if('serviceWorker'in navigator){let rl=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rl)location.reload()});
  navigator.serviceWorker.register('sw.js').then(reg=>{const ready=w=>{$('upd').style.display='block';$('upd').onclick=()=>{rl=true;w.postMessage('skip')}};
