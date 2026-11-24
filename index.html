@@ -2,7 +2,7 @@
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#232826"><link rel="manifest" href="manifest.json">
-<link rel="icon" href="icon-192.png"><title>Boulder Logger</title>
+<link rel="icon" href="icon-192.png"><title>Topo Creator</title>
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css">
 <style>
 :root{--ink:#232826;--paper:#eef0ea;--card:#fff;--mute:#677069;--line:#d3d7cf;--acc:#3e6b48;--acc-t:#fff;--red:#e5382b}
@@ -33,19 +33,21 @@ canvas.topo{max-width:100%;max-height:58vh;width:auto;border-radius:10px;touch-a
 #v-detail h2{margin:12px 0 4px}
 h3{margin:22px 0 6px;font-size:16px}
 .sec{font-weight:600;color:var(--acc);margin:1px 0 5px}
+#pkg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:55vh;overflow:auto;margin:10px 0}#pkg canvas{width:100%;aspect-ratio:1;border-radius:8px;display:block}#pkg .m{font-size:12px}
+.lgr{padding:9px 0;border-bottom:1px solid var(--line)}.dot{display:inline-block;width:22px;height:22px;border-radius:50%;color:#fff;text-align:center;line-height:22px;font-size:13px;font-weight:700;margin-right:6px}
 .st{color:#c98a00;margin-right:6px;font-size:17px}.star{font-size:26px;padding:6px;margin-top:0}
 button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
 .sheet select{width:100%;padding:11px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin-bottom:8px}
 #sugg{border:1px solid var(--line);border-radius:8px;background:var(--card);margin-top:4px;max-height:220px;overflow:auto}#sugg div{padding:12px;border-bottom:1px solid var(--line)}#sugg div:last-child{border:0}
 .ck{display:flex;align-items:center;padding:0 0 0 12px;margin:0}.ck input,#selall,#pdfmap{width:24px;height:24px;padding:0;margin:0;accent-color:var(--acc)}
 .item .x{align-self:center;margin:0 10px 0 auto;padding:8px 10px;border:1px solid var(--red);color:var(--red);background:none;border-radius:8px;font:600 13px system-ui}
-#pdfopt,#ukcopt{position:fixed;inset:0;background:#0007;z-index:4000;display:flex;align-items:flex-end}#pdfopt[hidden],#ukcopt[hidden]{display:none}
+#pdfopt,#ukcopt,#pkopt{position:fixed;inset:0;background:#0007;z-index:4000;display:flex;align-items:flex-end}#pdfopt[hidden],#ukcopt[hidden],#pkopt[hidden]{display:none}
 .sheet{background:var(--card);width:100%;padding:16px 16px calc(16px + env(safe-area-inset-bottom));border-radius:14px 14px 0 0}.sheet button{display:block;width:100%}#v-more button{display:block;width:100%}#v-more .row button{width:auto}
 .bar{display:flex;gap:8px;margin-bottom:12px}.bar select{flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}.bar button{margin:0}
 #v-map{position:relative}#mapbar{position:absolute;top:10px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:6px;align-items:flex-end}#mapbar button{margin:0;box-shadow:0 1px 4px #0006}#mapbar span{background:var(--card);color:var(--ink);padding:4px 8px;border-radius:6px;font-size:13px}
 #upd{display:none;position:fixed;left:12px;right:12px;bottom:calc(72px + env(safe-area-inset-bottom));z-index:3000;background:var(--ink);color:var(--paper);padding:13px 14px;border-radius:10px;font-weight:700;text-align:center}
 </style></head><body>
-<header><h1 id="ttl">Boulder Logger</h1><span id="net"></span></header>
+<header><h1 id="ttl">Topo Creator</h1><span id="net"></span></header>
 <main>
 <section id="v-list"><div class="bar"><select id="fs"></select><select id="fg"></select></div><div class="bar"><button class="s" id="pdf" type="button" style="flex:1">Export PDF</button><button class="s" id="ukc" type="button" style="flex:1">UKC file</button></div><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="selall">Select all shown</label><div id="items"></div></section>
 <section id="v-map"><div id="map"></div><div id="mapbar"><button class="p" id="sat" type="button">Satellite</button><span>Tiles you view are kept for offline use</span></div><div id="gattr" hidden style="position:absolute;left:6px;bottom:6px;z-index:1000;background:#fffc;padding:2px 6px;font-size:11px;border-radius:4px;color:#000"></div></section>
@@ -58,6 +60,7 @@ button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
  <label>Sector (optional)</label><input id="sector" placeholder="e.g. Hemakuta Hill" autocomplete="off"><div id="sugg" hidden></div><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
  <label>Photo</label>
  <div class="row"><button class="p" id="cam" type="button">Take photo</button><button class="s" id="gal" type="button">Choose photo</button></div>
+ <button class="s" id="usep" type="button" style="width:100%">Use a logged photo</button>
  <input id="fcam" type="file" accept="image/*" capture="environment" hidden><input id="fgal" type="file" accept="image/*" hidden>
  <div id="drawbox" hidden>
   <canvas class="topo" id="cv"></canvas>
@@ -92,6 +95,7 @@ button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
 </section>
 </main>
 <div id="pdfopt" hidden><div class="sheet"><b>Export PDF</b><p class="m" id="pdfs"></p><label style="margin-top:0">File name</label><input id="pdfname" autocomplete="off" style="margin-bottom:10px"><label style="margin-top:0">Region and country (under the title)</label><input id="pdfreg" autocomplete="off" placeholder="e.g. Hampi, India" style="margin-bottom:10px"><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="pdfmap" checked>Include map page</label><button class="p" id="pdfphone" type="button">Save to phone</button><button class="p" id="pdfdrive" type="button">Upload to Google Drive</button><button class="s" id="pdfsign" type="button">Sign in to Google Drive</button><button class="s" id="pdfx" type="button">Close</button></div></div>
+<div id="pkopt" hidden><div class="sheet"><b>Choose a logged photo</b><p class="m">Tap a photo to add another problem on it.</p><div id="pkg"></div><button class="s" id="pkx" type="button">Close</button></div></div>
 <div id="ukcopt" hidden><div class="sheet"><b>UKC upload file</b><p class="m" id="ukcs"></p><label style="margin-top:0">The UKC crag is your</label><select id="ukclvl"><option value="r">Region (sectors become buttresses)</option><option value="s">Sector (one file per sector)</option></select><button class="p" id="ukcphone" type="button">Save to phone</button><button class="p" id="ukcdrive" type="button">Upload to Google Drive</button><button class="s" id="ukcsign" type="button">Sign in to Google Drive</button><button class="s" id="ukcx" type="button">Close</button></div></div>
 <div id="upd">New version ready. Tap to reload.</div>
 <nav><button data-v="list" class="on">Topos</button><button data-v="map">Map</button><button data-v="add">Add</button><button data-v="more">More</button></nav>
@@ -112,23 +116,26 @@ addEventListener('online',net);addEventListener('offline',net);net();
 
 // ---- drawing ----
 let bm=null,strokes=[],cur=null;
-function draw(cv,bmp,st){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getContext('2d');c.drawImage(bmp,0,0);c.lineCap=c.lineJoin='round';const w=cv.width;
- for(const s of st){if(!s.length)continue;const path=()=>{c.beginPath();s.forEach(([x,y],i)=>i?c.lineTo(x*w,y*cv.height):c.moveTo(x*w,y*cv.height))};
-  path();c.lineWidth=w*.017;c.strokeStyle='#fff';c.stroke();path();c.lineWidth=w*.009;c.strokeStyle='#e5382b';c.stroke();
-  c.beginPath();c.arc(s[0][0]*w,s[0][1]*cv.height,w*.016,0,7);c.fillStyle='#e5382b';c.fill();c.lineWidth=w*.005;c.strokeStyle='#fff';c.stroke()}}
+const LC=['#e5382b','#1f7ae0','#18a058','#e08a00','#8e44ad','#00a5b8'];
+function ln(c,w,h,st,col,lab){c.lineCap=c.lineJoin='round';for(const s of st){if(!s.length)continue;const p=()=>{c.beginPath();s.forEach(([x,y],i)=>i?c.lineTo(x*w,y*h):c.moveTo(x*w,y*h))};
+ p();c.lineWidth=w*.017;c.strokeStyle='#fff';c.stroke();p();c.lineWidth=w*.009;c.strokeStyle=col;c.stroke();
+ c.beginPath();c.arc(s[0][0]*w,s[0][1]*h,w*.016,0,7);c.fillStyle=col;c.fill();c.lineWidth=w*.005;c.strokeStyle='#fff';c.stroke();
+ if(lab){c.fillStyle='#fff';c.font='bold '+Math.round(w*.02)+'px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(lab,s[0][0]*w,s[0][1]*h+1)}}}
+function draw(cv,bmp,st,oth,lab){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getContext('2d');c.drawImage(bmp,0,0);(oth||[]).forEach(o=>ln(c,cv.width,cv.height,o.st,'#8a8f8b',o.label));ln(c,cv.width,cv.height,st,LC[((lab||1)-1)%6],lab&&(oth||[]).length?lab:0)}
+function drawGroup(cv,bmp,G){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getContext('2d');c.drawImage(bmp,0,0);G.forEach((b,k)=>ln(c,cv.width,cv.height,b.strokes||[],LC[k%6],G.length>1?k+1:0))}
 async function shrink(file){const b=await createImageBitmap(file),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',.82))}
-async function pick(f){if(!f)return;photo=await shrink(f);bm=await createImageBitmap(photo);strokes=[];$('drawbox').hidden=false;$('cv').classList.remove('dr');$('dm').textContent='Draw line';draw($('cv'),bm,strokes)}
+async function pick(f){if(!f)return;photo=await shrink(f);bm=await createImageBitmap(photo);strokes=[];curBid=null;others=[];myLabel=1;$('drawbox').hidden=false;$('cv').classList.remove('dr');$('dm').textContent='Draw line';redraw()}
 let photo=null;
 $('cam').onclick=()=>$('fcam').click();$('gal').onclick=()=>$('fgal').click();
 $('fcam').onchange=e=>pick(e.target.files[0]);$('fgal').onchange=e=>pick(e.target.files[0]);
 const cv=$('cv'),pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]};
-cv.onpointerdown=e=>{if(!cv.classList.contains('dr'))return;cv.setPointerCapture(e.pointerId);cur=[pt(e)];strokes.push(cur);draw(cv,bm,strokes)};
-cv.onpointermove=e=>{if(!cur)return;cur.push(pt(e));draw(cv,bm,strokes)};
+cv.onpointerdown=e=>{if(!cv.classList.contains('dr'))return;cv.setPointerCapture(e.pointerId);cur=[pt(e)];strokes.push(cur);redraw()};
+cv.onpointermove=e=>{if(!cur)return;cur.push(pt(e));redraw()};
 cv.onpointerup=cv.onpointercancel=()=>{cur=null};
-$('undo').onclick=()=>{strokes.pop();draw(cv,bm,strokes)};$('clr').onclick=()=>{strokes=[];draw(cv,bm,strokes)};
+$('undo').onclick=()=>{strokes.pop();redraw()};$('clr').onclick=()=>{strokes=[];redraw()};
 $('dm').onclick=()=>{const on=cv.classList.toggle('dr');$('dm').textContent=on?'Done':'Draw line'};
-$('rot').onclick=async()=>{if(!bm)return;const c=document.createElement('canvas');c.width=bm.height;c.height=bm.width;const x=c.getContext('2d');x.translate(c.width,0);x.rotate(Math.PI/2);x.drawImage(bm,0,0);
- photo=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));bm=await createImageBitmap(photo);strokes=strokes.map(s=>s.map(([a,b])=>[1-b,a]));draw(cv,bm,strokes)};
+$('rot').onclick=async()=>{if(!bm)return;if(others.length){alert('Other problems share this photo, so it cannot be rotated. Rotate it before adding more problems.');return}const c=document.createElement('canvas');c.width=bm.height;c.height=bm.width;const x=c.getContext('2d');x.translate(c.width,0);x.rotate(Math.PI/2);x.drawImage(bm,0,0);
+ photo=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));bm=await createImageBitmap(photo);strokes=strokes.map(s=>s.map(([a,b])=>[1-b,a]));redraw()};
 
 // ---- GPS ----
 function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS not available. Enter coordinates by hand.';return}
@@ -136,24 +143,24 @@ function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS
  navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(6);$('lng').value=p.coords.longitude.toFixed(6);m.textContent='GPS fix, accuracy about '+Math.round(p.coords.accuracy)+' m'},
  ()=>{m.textContent='No GPS fix. Enter coordinates by hand or try again outside.'},{enableHighAccuracy:true,timeout:25000,maximumAge:20000})}
 $('regps').onclick=gps;
-let editing=null,stars=0,sit=false;
+let editing=null,stars=0,sit=false,others=[],myLabel=1,curBid=null;
+function redraw(){draw(cv,bm,strokes,others,myLabel)}
 function drawStars(){const s=$('stars');s.innerHTML='';for(let i=1;i<=3;i++){const b=document.createElement('button');b.type='button';b.className='s star';b.textContent=i<=stars?'★':'☆';b.onclick=()=>{stars=stars===i?i-1:i;drawStars()};s.appendChild(b)}}
 function sitUI(){$('sit').classList.toggle('on',sit);$('sit').textContent=sit?'Sit start: yes':'Sit start'}
 $('sit').onclick=()=>{sit=!sit;sitUI()};drawStars();sitUI();
-function resetForm(){editing=null;['name','sector','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder';stars=0;sit=false;drawStars();sitUI()}
+function resetForm(){editing=null;['name','sector','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder';curBid=null;others=[];myLabel=1;stars=0;sit=false;drawStars();sitUI()}
 $('cancel').onclick=()=>{resetForm();show('list')};
-async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('fa').value=b.fa??'';$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;draw(cv,bm,strokes)}$('cancel').hidden=false;$('save').textContent='Save changes';stars=b.stars||0;sit=!!b.sit;drawStars();sitUI()}
+async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('fa').value=b.fa??'';$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];curBid=b.bid||null;{const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));myLabel=Math.max(1,G.findIndex(x=>x.id===b.id)+1);others=G.filter(x=>x.id!==b.id).map(x=>({st:x.strokes||[],label:G.indexOf(x)+1}))}if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;redraw()}$('cancel').hidden=false;$('save').textContent='Save changes';stars=b.stars||0;sit=!!b.sit;drawStars();sitUI()}
 
 // ---- save ----
 $('save').onclick=async()=>{const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}
  const lat=parseFloat($('lat').value),lng=parseFloat($('lng').value);
- await put({id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),fa:$('fa').value.trim(),stars,sit,country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()});ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());
- resetForm();show('list')};
+ const sv={id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),fa:$('fa').value.trim(),stars,sit,bid:curBid,country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()};await put(sv);ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());const sid=sv.id,hp=!!photo&&!editing;resetForm();if(hp)detail(sid);else show('list')};
 
 // ---- views ----
 const T={list:'Boulders',map:'Map',add:'New boulder',detail:'Boulder',more:'More'};let map,layer;
 async function show(v){document.querySelectorAll('section').forEach(s=>s.classList.toggle('on',s.id==='v-'+v));
- document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===(v==='detail'?'list':v)));$('ttl').textContent='Boulder Logger';
+ document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===(v==='detail'?'list':v)));$('ttl').textContent='Topo Creator';
  if(v==='list')await renderList();if(v==='map')await renderMap();if(v==='more')await renderMore();if(v==='add'&&!editing){if(!$('when').value)setWhen();if(!$('lat').value)gps()}}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='add'&&editing)resetForm();show(b.dataset.v)});
 async function thumb(cv,b){const m=await createImageBitmap(b.photo);const k=184/Math.min(m.width,m.height);const t=document.createElement('canvas');draw(t,m,b.strokes);cv.width=cv.height=184;cv.getContext('2d').drawImage(t,(t.width-184/k)/2,(t.height-184/k)/2,184/k,184/k,0,0,184,184)}
@@ -162,10 +169,10 @@ async function renderList(){const A=(await all()).sort((a,b)=>b.created.localeCo
  gs=[...new Set(A.map(b=>b.grade).filter(Boolean))].sort(),ss=[...new Set(A.map(b=>b.sector).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
  fg.innerHTML='<option value="">All grades</option>'+gs.map(g=>`<option>${esc(g)}</option>`).join('');fg.value=gs.includes(pg)?pg:'';
  fs.innerHTML='<option value="">All sectors</option>'+ss.map(g=>`<option>${esc(g)}</option>`).join('');fs.value=ss.includes(ps)?ps:'';
- sel=new Set([...sel].filter(id=>A.some(b=>b.id===id)));shown=A.filter(b=>(!fg.value||b.grade===fg.value)&&(!fs.value||b.sector===fs.value));upd();const el=$('items');
+ const gc=new Map();A.forEach(b=>{const k=b.bid||b.id;gc.set(k,(gc.get(k)||0)+1)});sel=new Set([...sel].filter(id=>A.some(b=>b.id===id)));shown=A.filter(b=>(!fg.value||b.grade===fg.value)&&(!fs.value||b.sector===fs.value));upd();const el=$('items');
  if(!shown.length){el.innerHTML='<p class="empty">'+(A.length?'No boulders match these filters.':'No boulders logged yet.<br>Tap Add to log your first.')+'</p>';return}
  el.innerHTML='';for(const b of shown){const d=document.createElement('div');d.className='item';
-  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}</div><span class="g">${esc(b.grade)||'?'}</span><span class="st">${'★'.repeat(b.stars||0)}</span>${b.sit?'<span class="m">Sit start</span>':''}<br><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
+  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}</div><span class="g">${esc(b.grade)||'?'}</span><span class="st">${'★'.repeat(b.stars||0)}</span>${b.sit?'<span class="m">Sit start </span>':''}${gc.get(b.bid||b.id)>1?'<span class="m">'+gc.get(b.bid||b.id)+' on this photo</span>':''}<br><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
   const x=document.createElement('button');x.className='x';x.textContent='Delete';x.onclick=async e=>{e.stopPropagation();if(confirm('Delete "'+b.name+'"? This cannot be undone.')){await del(b.id);renderList()}};d.appendChild(x);
   const ck=document.createElement('label');ck.className='ck';ck.onclick=e=>e.stopPropagation();ck.innerHTML='<input type="checkbox">';const cb=ck.firstChild;cb.checked=sel.has(b.id);cb.onchange=()=>{cb.checked?sel.add(b.id):sel.delete(b.id);upd()};d.insertBefore(ck,d.firstChild);
   d.onclick=()=>detail(b.id);el.appendChild(d);if(b.photo)thumb(d.querySelector('canvas'),b)}}
@@ -187,22 +194,29 @@ async function coverMap(pins){const W=1100,H=1000,c=document.createElement('canv
  return{img:c.toDataURL('image/jpeg',.85),ok,W,H}}
 async function makePdf(){
  if(!window.jspdf){alert('PDF tool not loaded. Open the app once with a connection.');return}
- const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),L=[...pdfSet()].sort((a,b)=>(a.sector||'').localeCompare(b.sector||'')||a.name.localeCompare(b.name));
- if($('pdfmap').checked){const pins=L.map((b,i)=>({n:i+1,lat:b.lat,lng:b.lng})).filter(p=>p.lat!=null);
-  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);const ts=doc.splitTextToSize([...new Set(L.map(b=>b.sector).filter(Boolean))].sort().join(', ')||'Boulders',180),tl=ts.slice(0,2);if(ts.length>2)tl[1]+='…';doc.text(tl,15,20);
+ const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),M=new Map(),PS=pdfSet();
+ PS.forEach(b=>{const k=b.bid||b.id;M.set(k,[...(M.get(k)||[]),b])});
+ const L=[...M.values()].map(g=>g.sort((a,b)=>a.created.localeCompare(b.created))).sort((a,b)=>(a[0].sector||'').localeCompare(b[0].sector||'')||a[0].name.localeCompare(b[0].name)),N=L.length,P=PS.length,cc=g=>g.find(b=>b.lat!=null);
+ if($('pdfmap').checked){const pins=L.map((g,i)=>{const c=cc(g);return c&&{n:i+1,lat:c.lat,lng:c.lng}}).filter(Boolean);
+  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);
+  const ts=doc.splitTextToSize([...new Set(PS.map(b=>b.sector).filter(Boolean))].sort().join(', ')||'Boulders',180),tl=ts.slice(0,2);if(ts.length>2)tl[1]+='…';doc.text(tl,15,20);
   const ty=20+(tl.length-1)*8,region=$('pdfreg').value.trim();ls.set('region',region);if(region){doc.setFont('helvetica','normal').setFontSize(13).setTextColor(60);doc.text(region,15,ty+7)}
-  doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90);doc.text(L.length+' boulder'+(L.length==1?'':'s')+', '+new Date().toLocaleDateString('en-GB'),15,ty+13);let y=ty+19;
+  doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90);doc.text(N+' boulder'+(N==1?'':'s')+(P!==N?', '+P+' problems':'')+', '+new Date().toLocaleDateString('en-GB'),15,ty+13);let y=ty+19;
   if(pins.length){const m=await coverMap(pins),w=180,h=w*m.H/m.W;doc.addImage(m.img,'JPEG',15,y,w,h);y+=h+5;if(!m.ok){doc.setFontSize(9);doc.text('Base map unavailable offline. Pins are plotted by coordinates only.',15,y);y+=5}}
   doc.setFontSize(10).setTextColor(0);const y0=y+3,per=Math.max(1,Math.floor((282-y0)/5));
-  L.forEach((b,i)=>{if(i&&i%(2*per)===0)doc.addPage();const pg=Math.floor(i/(2*per)),col=Math.floor(i/per)%2,row=i%per;doc.text((i+1)+'. '+b.name+(b.grade?' ('+b.grade+')':'')+(b.lat==null?' (no pin)':''),15+col*95,(pg?20:y0)+row*5,{maxWidth:90})});
+  L.forEach((g,i)=>{if(i&&i%(2*per)===0)doc.addPage();const pg=Math.floor(i/(2*per)),col=Math.floor(i/per)%2,row=i%per,l1=doc.splitTextToSize((i+1)+'. '+g.map(b=>b.name+(b.grade?' ('+b.grade+')':'')).join(', ')+(cc(g)?'':' (no pin)'),90);doc.text(l1[0]+(l1.length>1?'…':''),15+col*95,(pg?20:y0)+row*5)});
   doc.addPage()}
- for(let i=0;i<L.length;i++){const b=L[i];if(i)doc.addPage();
-  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text((i+1)+'. '+b.name,15,22,{maxWidth:150});doc.text(b.grade||'',195,22,{align:'right'});
-  doc.setFont('helvetica','normal').setFontSize(11);doc.text(b.sector||'No sector',15,30);doc.text('First ascent: '+(b.fa||'not recorded')+'   Logged: '+fmt(b.created),15,36);doc.text((b.stars||0)+' of 3 stars'+(b.sit?', sit start':''),195,30,{align:'right'});let y=43;
-  if(b.photo){const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const k=Math.min(180/c.width,170/c.height),w=c.width*k,h=c.height*k;doc.addImage(c.toDataURL('image/jpeg',.85),'JPEG',(210-w)/2,y,w,h);y+=h+8}
-  const t=doc.splitTextToSize(b.desc||'',180).slice(0,18);doc.text(t,15,y);y+=t.length*5+4;
-  if(b.lat!=null)doc.text('Coordinates: '+b.lat.toFixed(6)+', '+b.lng.toFixed(6),15,y);
-  doc.setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288);doc.text((i+1)+' / '+L.length,195,288,{align:'right'})}
+ for(let i=0;i<N;i++){const g=L[i],one=g.length===1,f=g[0],c=cc(g);if(i)doc.addPage();
+  if(c){doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90);doc.text('Coordinates: '+c.lat.toFixed(6)+', '+c.lng.toFixed(6),15,12)}
+  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text((i+1)+'. '+(one?f.name:(f.sector||'Boulder')+' ('+g.length+' problems)'),15,22,{maxWidth:150});if(one)doc.text(f.grade||'',195,22,{align:'right'});
+  doc.setFont('helvetica','normal').setFontSize(11);doc.text(f.sector||'No sector',15,30);
+  if(one){doc.text('First ascent: '+(f.fa||'not recorded')+'   Logged: '+fmt(f.created),15,36);doc.text((f.stars||0)+' of 3 stars'+(f.sit?', sit start':''),195,30,{align:'right'})}
+  let y=43;const pb=g.find(b=>b.photo);
+  if(pb){const c2=document.createElement('canvas');drawGroup(c2,await createImageBitmap(pb.photo),g);const k=Math.min(180/c2.width,(one?170:120)/c2.height),w=c2.width*k,h=c2.height*k;doc.addImage(c2.toDataURL('image/jpeg',.85),'JPEG',(210-w)/2,y,w,h);y+=h+8}
+  if(one){doc.text(doc.splitTextToSize(f.desc||'',180).slice(0,18),15,y)}
+  else g.forEach((b,j)=>{if(y>262){doc.addPage();y=20}doc.setFont('helvetica','bold').setFontSize(11).setTextColor(0);doc.text((j+1)+'. '+b.name+'   '+(b.grade||'')+'   '+(b.stars||0)+'/3 stars'+(b.sit?', sit start':''),15,y);y+=5;
+   doc.setFont('helvetica','normal').setFontSize(10);const t=doc.splitTextToSize((b.desc||'')+(b.fa?(b.desc?'  ':'')+'First ascent: '+b.fa:''),180).slice(0,3);if(t.length&&t[0]){doc.text(t,15,y);y+=t.length*4.5}y+=3});
+  doc.setFont('helvetica','normal').setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288);doc.text((i+1)+' / '+N,195,288,{align:'right'})}
  return doc.output('blob')}
 const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png',SAT='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';const MT='https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=';let osm,sat,isSat=false;function setSat(){const k=ls.get('mtkey');sat.setUrl(k?MT+k:SAT);sat.options.maxNativeZoom=k?19:17}
 async function renderMap(){if(!map){map=L.map('map').setView([15.335,76.46],13);
@@ -220,11 +234,21 @@ $('sat').onclick=async()=>{const names=['Map','Satellite'];if(ls.get('gkey'))nam
  try{nl=next===0?osm:next===1?sat:(await gLayer()).layer}catch(e){alert('Google tiles failed ('+e.message+'). Check the key, that Map Tiles API and billing are enabled, and that you are online.');return}
  [osm,sat,gl&&gl.layer].forEach(l=>l&&map.hasLayer(l)&&map.removeLayer(l));nl.addTo(map);li=next;$('sat').textContent=names[(li+1)%names.length];gattr()};
 async function detail(id){const b=(await all()).find(x=>x.id===id);if(!b)return;await show('detail');const el=$('v-detail');
- el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}${b.fa?'<p class="m">First ascent: '+esc(b.fa)+'</p>':''}<p class="m">${'★'.repeat(b.stars||0)}${'☆'.repeat(3-(b.stars||0))}${b.sit?'   Sit start':''}</p><p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
+ el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas><div id="lg"></div><button class="s" id="addp" type="button" style="width:100%">Add another problem on this photo</button>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}${b.fa?'<p class="m">First ascent: '+esc(b.fa)+'</p>':''}<p class="m">${'★'.repeat(b.stars||0)}${'☆'.repeat(3-(b.stars||0))}${b.sit?'   Sit start':''}</p><p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
  $('back').onclick=()=>show('list');$('ed').onclick=()=>edit(b);
  $('up').onclick=async()=>{if(!b.photo){alert('This boulder has no photo.');return}if(!await authed())return;const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
   try{await upload((b.sector?b.sector+' - ':'')+b.name+' '+(b.grade||'')+'.jpg',bl,[b.fa&&'First ascent: '+b.fa,b.desc,b.lat!=null&&b.lat+', '+b.lng].filter(Boolean).join('\n'));alert('Uploaded to Drive.')}catch(e){alert('Upload failed ('+e.message+'). Sign in again and retry.');tok=null}};$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
- if(b.photo)draw($('dc'),await createImageBitmap(b.photo),b.strokes)}
+ if(b.photo){const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));drawGroup($('dc'),await createImageBitmap(b.photo),G);
+  if(G.length>1)G.forEach((x,k)=>{const r=document.createElement('div');r.className='lgr';r.innerHTML='<span class="dot" style="background:'+LC[k%6]+'">'+(k+1)+'</span><b>'+esc(x.name)+'</b> '+esc(x.grade)+' '+'★'.repeat(x.stars||0)+(x.sit?' Sit start':'');if(x.id!==b.id)r.onclick=()=>detail(x.id);$('lg').appendChild(r)});
+  $('addp').onclick=()=>startFrom(b)}}
+async function startFrom(b){const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));
+ resetForm();$('sector').value=b.sector||'';$('country').value=b.country||$('country').value;$('region').value=b.region||$('region').value;$('lat').value=b.lat??'';$('lng').value=b.lng??'';
+ await show('add');curBid=b.bid||b.id;photo=b.photo;bm=await createImageBitmap(photo);strokes=[];others=G.map((x,k)=>({st:x.strokes||[],label:k+1}));myLabel=G.length+1;
+ $('gpsmsg').textContent='Location copied from the first problem on this photo.';$('drawbox').hidden=false;cv.classList.remove('dr');$('dm').textContent='Draw line';redraw();$('name').focus()}
+$('usep').onclick=async()=>{const M=new Map();(await all()).filter(b=>b.photo).sort((a,b)=>a.created.localeCompare(b.created)).forEach(b=>{const k=b.bid||b.id;if(!M.has(k))M.set(k,b)});
+ if(!M.size){alert('No logged photos yet.');return}const g=$('pkg');g.innerHTML='';
+ for(const b of [...M.values()].reverse()){const d=document.createElement('div'),c=document.createElement('canvas'),t=document.createElement('div');t.className='m';t.textContent=(b.sector||'No sector')+' - '+b.name;d.appendChild(c);d.appendChild(t);d.onclick=()=>{$('pkopt').hidden=true;startFrom(b)};g.appendChild(d);thumb(c,b)}$('pkopt').hidden=false};
+$('pkx').onclick=()=>{$('pkopt').hidden=true};
 let secs=[];
 async function loadSecs(){secs=[...new Set((await all()).filter(b=>!b.region||b.region.toLowerCase()===$('region').value.trim().toLowerCase()).map(b=>b.sector).filter(Boolean))].sort((a,b)=>a.localeCompare(b))}
 function sugg(){const q=$('sector').value.trim().toLowerCase(),sg=$('sugg'),m=secs.filter(s=>s.toLowerCase()!==q&&(!q||s.toLowerCase().includes(q))).sort((a,b)=>(b.toLowerCase().startsWith(q)-a.toLowerCase().startsWith(q))||a.localeCompare(b));
