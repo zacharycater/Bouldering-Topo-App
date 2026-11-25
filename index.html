@@ -35,6 +35,7 @@ h3{margin:22px 0 6px;font-size:16px}
 .sec{font-weight:600;color:var(--acc);margin:1px 0 5px}
 #pkg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-height:55vh;overflow:auto;margin:10px 0}#pkg canvas{width:100%;aspect-ratio:1;border-radius:8px;display:block}#pkg .m{font-size:12px}
 .lgr{padding:9px 0;border-bottom:1px solid var(--line)}.dot{display:inline-block;width:22px;height:22px;border-radius:50%;color:#fff;text-align:center;line-height:22px;font-size:13px;font-weight:700;margin-right:6px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;align-items:center}.chips .s{margin:0;padding:8px 12px;font-size:14px}
 .st{color:#c98a00;margin-right:6px;font-size:17px}.star{font-size:26px;padding:6px;margin-top:0}
 button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
 .sheet select{width:100%;padding:11px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin-bottom:8px}
@@ -55,9 +56,15 @@ button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
  <label>Problem name</label><input id="name" placeholder="Proposed name" autocomplete="off">
  <label>Stars</label><div id="stars" class="row"></div>
  <button class="s tg" id="sit" type="button" style="width:100%">Sit start</button>
- <label>First ascent</label><input id="fa" value="Zach Cater" autocomplete="off">
+ <label>Properties <span class="m" id="pcount"></span></label>
+ <div class="m" style="margin:0 0 6px">Steepness</div><div class="chips" id="steepbox"></div>
+ <div class="m" style="margin:10px 0 6px">Style (The Topo suggests about five properties in total)</div><div class="chips" id="propsbox"></div>
+ <button class="s tg" id="proj" type="button" style="width:100%;margin-top:14px">Project (not climbed yet)</button>
+ <div id="faall"><label>First ascent</label><div class="row" id="fas"></div>
+ <div id="fabox"><label>First ascent by</label><input id="fa" value="Zach Cater" autocomplete="off"><label>First ascent date (year or full date)</label><input id="fad" placeholder="e.g. 2026 or 2026-11-24" autocomplete="off"></div></div>
  <div class="row"><div><label>Country</label><input id="country" value="India" autocomplete="off"></div><div><label>Region</label><input id="region" value="Hampi" autocomplete="off"></div></div>
- <label>Sector (optional)</label><input id="sector" placeholder="e.g. Hemakuta Hill" autocomplete="off"><div id="sugg" hidden></div><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
+ <label>Sector (optional)</label><input id="sector" placeholder="e.g. Hemakuta Hill" autocomplete="off"><div id="sugg" hidden></div>
+ <label>Boulder name (optional)</label><input id="bname" placeholder="e.g. Banana Boulder" autocomplete="off"><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
  <label>Photo</label>
  <div class="row"><button class="p" id="cam" type="button">Take photo</button><button class="s" id="gal" type="button">Choose photo</button></div>
  <button class="s" id="usep" type="button" style="width:100%">Use a logged photo</button>
@@ -69,6 +76,8 @@ button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
   <button class="s" id="rot" type="button" style="width:100%">Rotate photo 90°</button>
  </div>
  <label>Description</label><textarea id="desc" rows="3" placeholder="Start, line, top-out, landing…"></textarea>
+ <label>Extra photos</label><button class="s" id="xadd" type="button" style="width:100%">Add photos</button><input id="fx" type="file" accept="image/*" multiple hidden><div class="chips" id="xth" style="margin-top:8px"></div>
+ <label>Beta video link (optional)</label><input id="video" placeholder="https://..." inputmode="url" autocomplete="off">
  <label>Date and time</label><input id="when" type="datetime-local">
  <label>Location</label>
  <div class="row"><input id="lat" inputmode="decimal" placeholder="Latitude (15.3350)"><input id="lng" inputmode="decimal" placeholder="Longitude (76.4600)"></div>
@@ -111,6 +120,13 @@ const esc=s=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&g
 const fmt=s=>new Date(s).toLocaleString('en-GB',{dateStyle:'medium',timeStyle:'short'});
 const ls={get:k=>{try{return localStorage.getItem(k)}catch(_){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(_){}}};
 const setWhen=d=>{const t=d?new Date(d):new Date();$('when').value=new Date(t-t.getTimezoneOffset()*6e4).toISOString().slice(0,16)};
+const PROPS=[['trav','Traverse',null],['top','Tops out',null],['high','Highball / dangerous','13'],['crimp','Crimpy','7'],['slop','Slopers','8'],['jugs','Jugs',null],['pock','Pockets',null],['reach','Reachy','4'],['sust','Sustained','5'],['tech','Technical','15'],['pow','Powerful','14'],['dyno','Dyno','11'],['loose','Loose','9'],['graun','Graunchy','12']],STEEP=[['slab','Slab'],['vert','Vertical'],['over','Overhanging'],['roof','Roof']];
+const pname=k=>(PROPS.find(p=>p[0]===k)||[])[1]||k,sname=k=>(STEEP.find(p=>p[0]===k)||[])[1]||'';
+const faOf=b=>{const s=b.fas||(b.fa?(/zach\s*cater/i.test(b.fa)?'me':'other'):'unknown'),no=s==='unknown'||b.proj;return{s,name:no?'':(b.fa||''),date:no?'':(b.fad||'')}};
+const faText=b=>{if(b.proj)return'Project (not yet climbed)';const f=faOf(b);return f.s==='unknown'?'First ascent: unknown (existing problem)':'First ascent: '+[f.name,f.date].filter(Boolean).join(', ')};
+const ukcFA=b=>{const f=faOf(b);return[f.name,f.date].filter(Boolean).join(', ')};
+const propList=b=>[sname(b.steep),...(b.props||[]).map(pname),b.sit?'Sit start':''].filter(Boolean);
+const ukcSym=b=>[...(b.props||[]).map(k=>(PROPS.find(p=>p[0]===k)||[])[2]),b.sit?'10':null].filter(Boolean).map(Number).sort((a,b)=>a-b).join(',');
 function net(){$('net').textContent=navigator.onLine?'Online':'Offline';$('net').className=navigator.onLine?'':'off'}
 addEventListener('online',net);addEventListener('offline',net);net();
 
@@ -143,19 +159,31 @@ function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS
  navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(6);$('lng').value=p.coords.longitude.toFixed(6);m.textContent='GPS fix, accuracy about '+Math.round(p.coords.accuracy)+' m'},
  ()=>{m.textContent='No GPS fix. Enter coordinates by hand or try again outside.'},{enableHighAccuracy:true,timeout:25000,maximumAge:20000})}
 $('regps').onclick=gps;
-let editing=null,stars=0,sit=false,others=[],myLabel=1,curBid=null;
+let editing=null,stars=0,sit=false,others=[],myLabel=1,curBid=null,fas='me',proj=false,steep='',props=new Set(),extra=[];
 function redraw(){draw(cv,bm,strokes,others,myLabel)}
 function drawStars(){const s=$('stars');s.innerHTML='';for(let i=1;i<=3;i++){const b=document.createElement('button');b.type='button';b.className='s star';b.textContent=i<=stars?'★':'☆';b.onclick=()=>{stars=stars===i?i-1:i;drawStars()};s.appendChild(b)}}
-function sitUI(){$('sit').classList.toggle('on',sit);$('sit').textContent=sit?'Sit start: yes':'Sit start'}
-$('sit').onclick=()=>{sit=!sit;sitUI()};drawStars();sitUI();
-function resetForm(){editing=null;['name','sector','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder';curBid=null;others=[];myLabel=1;stars=0;sit=false;drawStars();sitUI()}
+function sitUI(){$('sit').classList.toggle('on',sit);$('sit').textContent=sit?'Sit start: yes':'Sit start';uiProps()}
+$('sit').onclick=()=>{sit=!sit;sitUI()};
+function chip(par,label,on,fn){const b=document.createElement('button');b.type='button';b.className='s tg'+(on?' on':'');b.textContent=label;b.onclick=fn;par.appendChild(b)}
+function uiFA(){const r=$('fas');r.innerHTML='';[['me','Mine'],['unknown','Unknown'],['other','Someone else']].forEach(([k,l])=>chip(r,l,fas===k,()=>{fas=k;const z=/zach\s*cater/i.test($('fa').value);
+ if(k==='me'){$('fa').value='Zach Cater';if(!$('fad').value)$('fad').value=''+new Date().getFullYear()}if(k==='other'&&z)$('fa').value='';if(k==='unknown'){$('fa').value='';$('fad').value=''}uiFA()}));$('faall').hidden=proj;$('fabox').hidden=fas==='unknown'}
+function uiProj(){$('proj').classList.toggle('on',proj);$('proj').textContent=proj?'Project: yes (not climbed yet)':'Project (not climbed yet)';uiFA()}
+$('proj').onclick=()=>{proj=!proj;uiProj()};
+function uiProps(){const s=$('steepbox');s.innerHTML='';STEEP.forEach(([k,l])=>chip(s,l,steep===k,()=>{steep=steep===k?'':k;uiProps()}));const p=$('propsbox');p.innerHTML='';PROPS.forEach(([k,l])=>chip(p,l,props.has(k),()=>{props.has(k)?props.delete(k):props.add(k);uiProps()}));
+ const n=(steep?1:0)+props.size+(sit?1:0);$('pcount').textContent=n+' selected'+(n>5?' (The Topo suggests five or fewer)':'')}
+function uiExtra(){const t=$('xth');t.innerHTML='';extra.forEach((bl,i)=>{const w=document.createElement('span');w.style.cssText='position:relative;display:inline-block';const im=document.createElement('img');im.src=URL.createObjectURL(bl);im.style.cssText='width:64px;height:64px;object-fit:cover;border-radius:8px';
+ const x=document.createElement('button');x.type='button';x.textContent='×';x.className='s';x.style.cssText='position:absolute;top:-6px;right:-6px;padding:0 7px;margin:0;border-radius:50%';x.onclick=()=>{extra.splice(i,1);uiExtra()};w.append(im,x);t.appendChild(w)});$('xadd').textContent=extra.length?'Add more photos ('+extra.length+' of 6)':'Add photos'}
+$('xadd').onclick=()=>$('fx').click();
+$('fx').onchange=async e=>{for(const f of [...e.target.files]){if(extra.length>=6){alert('Up to 6 extra photos.');break}extra.push(await shrink(f))}e.target.value='';uiExtra()};
+drawStars();sitUI();uiFA();uiExtra();uiProj();$('fad').value=''+new Date().getFullYear();
+function resetForm(){editing=null;['name','sector','bname','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('fad').value=''+new Date().getFullYear();$('video').value='';fas='me';proj=false;steep='';props=new Set();extra=[];uiFA();uiExtra();uiProj();$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder';curBid=null;others=[];myLabel=1;stars=0;sit=false;drawStars();sitUI()}
 $('cancel').onclick=()=>{resetForm();show('list')};
-async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('fa').value=b.fa??'';$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];curBid=b.bid||null;{const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));myLabel=Math.max(1,G.findIndex(x=>x.id===b.id)+1);others=G.filter(x=>x.id!==b.id).map(x=>({st:x.strokes||[],label:G.indexOf(x)+1}))}if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;redraw()}$('cancel').hidden=false;$('save').textContent='Save changes';stars=b.stars||0;sit=!!b.sit;drawStars();sitUI()}
+async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('bname').value=b.bname||'';{const f=faOf(b);fas=f.s;proj=!!b.proj;$('fa').value=f.name;$('fad').value=f.date;steep=b.steep||'';props=new Set(b.props||[]);extra=[...(b.extra||[])];$('video').value=b.video||'';uiFA();uiExtra();uiProj()}$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];curBid=b.bid||null;{const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));myLabel=Math.max(1,G.findIndex(x=>x.id===b.id)+1);others=G.filter(x=>x.id!==b.id).map(x=>({st:x.strokes||[],label:G.indexOf(x)+1}))}if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;redraw()}$('cancel').hidden=false;$('save').textContent='Save changes';stars=b.stars||0;sit=!!b.sit;drawStars();sitUI()}
 
 // ---- save ----
-$('save').onclick=async()=>{const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}
+$('save').onclick=async()=>{const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}const vid=$('video').value.trim();if(vid&&!/^https?:\/\//i.test(vid)){alert('The video link must start with http:// or https://');return}
  const lat=parseFloat($('lat').value),lng=parseFloat($('lng').value);
- const sv={id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),fa:$('fa').value.trim(),stars,sit,bid:curBid,country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()};await put(sv);ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());const sid=sv.id,hp=!!photo&&!editing;resetForm();if(hp)detail(sid);else show('list')};
+ const sv={id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),bname:$('bname').value.trim(),fa:fas==='unknown'||proj?'':$('fa').value.trim(),fad:fas==='unknown'||proj?'':$('fad').value.trim(),fas:proj?'unknown':fas,proj,steep,props:[...props],extra,video:vid,stars,sit,bid:curBid,country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()};await put(sv);ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());const sid=sv.id,hp=!!photo&&!editing;resetForm();if(hp)detail(sid);else show('list')};
 
 // ---- views ----
 const T={list:'Boulders',map:'Map',add:'New boulder',detail:'Boulder',more:'More'};let map,layer;
@@ -172,7 +200,7 @@ async function renderList(){const A=(await all()).sort((a,b)=>b.created.localeCo
  const gc=new Map();A.forEach(b=>{const k=b.bid||b.id;gc.set(k,(gc.get(k)||0)+1)});sel=new Set([...sel].filter(id=>A.some(b=>b.id===id)));shown=A.filter(b=>(!fg.value||b.grade===fg.value)&&(!fs.value||b.sector===fs.value));upd();const el=$('items');
  if(!shown.length){el.innerHTML='<p class="empty">'+(A.length?'No boulders match these filters.':'No boulders logged yet.<br>Tap Add to log your first.')+'</p>';return}
  el.innerHTML='';for(const b of shown){const d=document.createElement('div');d.className='item';
-  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}</div><span class="g">${esc(b.grade)||'?'}</span><span class="st">${'★'.repeat(b.stars||0)}</span>${b.sit?'<span class="m">Sit start </span>':''}${gc.get(b.bid||b.id)>1?'<span class="m">'+gc.get(b.bid||b.id)+' on this photo</span>':''}<br><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
+  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}${b.bname?' &gt; '+esc(b.bname):''}</div><span class="g">${esc(b.grade)||'?'}</span><span class="st">${'★'.repeat(b.stars||0)}</span>${b.proj?'<span class="m">Project </span>':''}${propList(b).length?'<span class="m">'+propList(b).map(esc).join(', ')+' </span>':''}${gc.get(b.bid||b.id)>1?'<span class="m">'+gc.get(b.bid||b.id)+' on this photo</span>':''}<br><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
   const x=document.createElement('button');x.className='x';x.textContent='Delete';x.onclick=async e=>{e.stopPropagation();if(confirm('Delete "'+b.name+'"? This cannot be undone.')){await del(b.id);renderList()}};d.appendChild(x);
   const ck=document.createElement('label');ck.className='ck';ck.onclick=e=>e.stopPropagation();ck.innerHTML='<input type="checkbox">';const cb=ck.firstChild;cb.checked=sel.has(b.id);cb.onchange=()=>{cb.checked?sel.add(b.id):sel.delete(b.id);upd()};d.insertBefore(ck,d.firstChild);
   d.onclick=()=>detail(b.id);el.appendChild(d);if(b.photo)thumb(d.querySelector('canvas'),b)}}
@@ -196,7 +224,7 @@ async function makePdf(){
  if(!window.jspdf){alert('PDF tool not loaded. Open the app once with a connection.');return}
  const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),M=new Map(),PS=pdfSet();
  PS.forEach(b=>{const k=b.bid||b.id;M.set(k,[...(M.get(k)||[]),b])});
- const L=[...M.values()].map(g=>g.sort((a,b)=>a.created.localeCompare(b.created))).sort((a,b)=>(a[0].sector||'').localeCompare(b[0].sector||'')||a[0].name.localeCompare(b[0].name)),N=L.length,P=PS.length,cc=g=>g.find(b=>b.lat!=null);
+ const L=[...M.values()].map(g=>g.sort((a,b)=>a.created.localeCompare(b.created))).sort((a,b)=>(a[0].sector||'').localeCompare(b[0].sector||'')||a[0].created.localeCompare(b[0].created)),N=L.length,P=PS.length,cc=g=>g.find(b=>b.lat!=null);
  if($('pdfmap').checked){const pins=L.map((g,i)=>{const c=cc(g);return c&&{n:i+1,lat:c.lat,lng:c.lng}}).filter(Boolean);
   doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);
   const ts=doc.splitTextToSize([...new Set(PS.map(b=>b.sector).filter(Boolean))].sort().join(', ')||'Boulders',180),tl=ts.slice(0,2);if(ts.length>2)tl[1]+='…';doc.text(tl,15,20);
@@ -204,18 +232,18 @@ async function makePdf(){
   doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90);doc.text(N+' boulder'+(N==1?'':'s')+(P!==N?', '+P+' problems':'')+', '+new Date().toLocaleDateString('en-GB'),15,ty+13);let y=ty+19;
   if(pins.length){const m=await coverMap(pins),w=180,h=w*m.H/m.W;doc.addImage(m.img,'JPEG',15,y,w,h);y+=h+5;if(!m.ok){doc.setFontSize(9);doc.text('Base map unavailable offline. Pins are plotted by coordinates only.',15,y);y+=5}}
   doc.setFontSize(10).setTextColor(0);const y0=y+3,per=Math.max(1,Math.floor((282-y0)/5));
-  L.forEach((g,i)=>{if(i&&i%(2*per)===0)doc.addPage();const pg=Math.floor(i/(2*per)),col=Math.floor(i/per)%2,row=i%per,l1=doc.splitTextToSize((i+1)+'. '+g.map(b=>b.name+(b.grade?' ('+b.grade+')':'')).join(', ')+(cc(g)?'':' (no pin)'),90);doc.text(l1[0]+(l1.length>1?'…':''),15+col*95,(pg?20:y0)+row*5)});
+  L.forEach((g,i)=>{if(i&&i%(2*per)===0)doc.addPage();const pg=Math.floor(i/(2*per)),col=Math.floor(i/per)%2,row=i%per,l1=doc.splitTextToSize((i+1)+'. '+((g.find(b=>b.bname)||{}).bname?g.find(b=>b.bname).bname+': ':'')+g.map(b=>b.name+(b.grade?' ('+b.grade+')':'')).join(', ')+(cc(g)?'':' (no pin)'),90);doc.text(l1[0]+(l1.length>1?'…':''),15+col*95,(pg?20:y0)+row*5)});
   doc.addPage()}
- for(let i=0;i<N;i++){const g=L[i],one=g.length===1,f=g[0],c=cc(g);if(i)doc.addPage();
+ for(let i=0;i<N;i++){const g=L[i],bn=(g.find(b=>b.bname)||{}).bname,one=g.length===1&&!bn,f=g[0],c=cc(g);if(i)doc.addPage();
   if(c){doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90);doc.text('Coordinates: '+c.lat.toFixed(6)+', '+c.lng.toFixed(6),15,12)}
-  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text((i+1)+'. '+(one?f.name:(f.sector||'Boulder')+' ('+g.length+' problems)'),15,22,{maxWidth:150});if(one)doc.text(f.grade||'',195,22,{align:'right'});
-  doc.setFont('helvetica','normal').setFontSize(11);doc.text(f.sector||'No sector',15,30);
-  if(one){doc.text('First ascent: '+(f.fa||'not recorded')+'   Logged: '+fmt(f.created),15,36);doc.text((f.stars||0)+' of 3 stars'+(f.sit?', sit start':''),195,30,{align:'right'})}
-  let y=43;const pb=g.find(b=>b.photo);
+  doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text((i+1)+'. '+(bn||(one?f.name:'Unnamed boulder')),15,22,{maxWidth:150});if(one)doc.text(f.grade||'',195,22,{align:'right'});
+  doc.setFont('helvetica','normal').setFontSize(11);doc.text((f.sector||'No sector')+(one?'':'   '+g.length+' problem'+(g.length==1?'':'s')),15,30);
+  if(one){doc.text(faText(f)+'   Logged: '+fmt(f.created),15,36);doc.text((f.stars||0)+' of 3 stars',195,30,{align:'right'});const pl=propList(f);if(pl.length)doc.text(pl.join(', '),15,42);if(f.video)doc.text('Beta video: '+f.video,15,47)}
+  let y=one?(f.video?52:46):43;const pb=g.find(b=>b.photo);
   if(pb){const c2=document.createElement('canvas');drawGroup(c2,await createImageBitmap(pb.photo),g);const k=Math.min(180/c2.width,(one?170:120)/c2.height),w=c2.width*k,h=c2.height*k;doc.addImage(c2.toDataURL('image/jpeg',.85),'JPEG',(210-w)/2,y,w,h);y+=h+8}
   if(one){doc.text(doc.splitTextToSize(f.desc||'',180).slice(0,18),15,y)}
-  else g.forEach((b,j)=>{if(y>262){doc.addPage();y=20}doc.setFont('helvetica','bold').setFontSize(11).setTextColor(0);doc.text((j+1)+'. '+b.name+'   '+(b.grade||'')+'   '+(b.stars||0)+'/3 stars'+(b.sit?', sit start':''),15,y);y+=5;
-   doc.setFont('helvetica','normal').setFontSize(10);const t=doc.splitTextToSize((b.desc||'')+(b.fa?(b.desc?'  ':'')+'First ascent: '+b.fa:''),180).slice(0,3);if(t.length&&t[0]){doc.text(t,15,y);y+=t.length*4.5}y+=3});
+  else g.forEach((b,j)=>{if(y>262){doc.addPage();y=20}doc.setFont('helvetica','bold').setFontSize(11).setTextColor(0);doc.text((j+1)+'. '+b.name+'   '+(b.grade||'')+'   '+(b.stars||0)+'/3 stars',15,y);y+=5;
+   doc.setFont('helvetica','normal').setFontSize(10);const t=doc.splitTextToSize([propList(b).join(', '),b.desc||'',faText(b)+(b.video?'  Video: '+b.video:'')].filter(Boolean).join('  '),180).slice(0,4);if(t.length&&t[0]){doc.text(t,15,y);y+=t.length*4.5}y+=3});
   doc.setFont('helvetica','normal').setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288);doc.text((i+1)+' / '+N,195,288,{align:'right'})}
  return doc.output('blob')}
 const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png',SAT='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';const MT='https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=';let osm,sat,isSat=false;function setSat(){const k=ls.get('mtkey');sat.setUrl(k?MT+k:SAT);sat.options.maxNativeZoom=k?19:17}
@@ -234,15 +262,15 @@ $('sat').onclick=async()=>{const names=['Map','Satellite'];if(ls.get('gkey'))nam
  try{nl=next===0?osm:next===1?sat:(await gLayer()).layer}catch(e){alert('Google tiles failed ('+e.message+'). Check the key, that Map Tiles API and billing are enabled, and that you are online.');return}
  [osm,sat,gl&&gl.layer].forEach(l=>l&&map.hasLayer(l)&&map.removeLayer(l));nl.addTo(map);li=next;$('sat').textContent=names[(li+1)%names.length];gattr()};
 async function detail(id){const b=(await all()).find(x=>x.id===id);if(!b)return;await show('detail');const el=$('v-detail');
- el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas><div id="lg"></div><button class="s" id="addp" type="button" style="width:100%">Add another problem on this photo</button>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}${b.fa?'<p class="m">First ascent: '+esc(b.fa)+'</p>':''}<p class="m">${'★'.repeat(b.stars||0)}${'☆'.repeat(3-(b.stars||0))}${b.sit?'   Sit start':''}</p><p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
- $('back').onclick=()=>show('list');$('ed').onclick=()=>edit(b);
+ el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas><div id="lg"></div><button class="s" id="addp" type="button" style="width:100%">Add another problem on this photo</button>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector,b.bname].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}<p class="m">${esc(faText(b))}</p><p class="m">${'★'.repeat(b.stars||0)}${'☆'.repeat(3-(b.stars||0))}</p>${propList(b).length?'<p class="m">'+propList(b).map(esc).join(', ')+'</p>':''}<p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p>${b.video&&/^https?:\/\//i.test(b.video)?'<p><a href="'+esc(b.video)+'" target="_blank" rel="noopener">Beta video</a></p>':''}<div id="xs" class="chips"></div><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
+ $('back').onclick=()=>show('list');$('ed').onclick=()=>edit(b);(b.extra||[]).forEach(bl=>{const im=document.createElement('img');im.src=URL.createObjectURL(bl);im.style.cssText='width:96px;height:96px;object-fit:cover;border-radius:8px';im.onclick=()=>window.open(im.src);$('xs').appendChild(im)});
  $('up').onclick=async()=>{if(!b.photo){alert('This boulder has no photo.');return}if(!await authed())return;const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
-  try{await upload((b.sector?b.sector+' - ':'')+b.name+' '+(b.grade||'')+'.jpg',bl,[b.fa&&'First ascent: '+b.fa,b.desc,b.lat!=null&&b.lat+', '+b.lng].filter(Boolean).join('\n'));alert('Uploaded to Drive.')}catch(e){alert('Upload failed ('+e.message+'). Sign in again and retry.');tok=null}};$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
+  try{await upload((b.sector?b.sector+' - ':'')+b.name+' '+(b.grade||'')+'.jpg',bl,[faText(b),propList(b).join(', '),b.desc,b.lat!=null&&b.lat+', '+b.lng].filter(Boolean).join('\n'));alert('Uploaded to Drive.')}catch(e){alert('Upload failed ('+e.message+'). Sign in again and retry.');tok=null}};$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
  if(b.photo){const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));drawGroup($('dc'),await createImageBitmap(b.photo),G);
   if(G.length>1)G.forEach((x,k)=>{const r=document.createElement('div');r.className='lgr';r.innerHTML='<span class="dot" style="background:'+LC[k%6]+'">'+(k+1)+'</span><b>'+esc(x.name)+'</b> '+esc(x.grade)+' '+'★'.repeat(x.stars||0)+(x.sit?' Sit start':'');if(x.id!==b.id)r.onclick=()=>detail(x.id);$('lg').appendChild(r)});
   $('addp').onclick=()=>startFrom(b)}}
 async function startFrom(b){const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));
- resetForm();$('sector').value=b.sector||'';$('country').value=b.country||$('country').value;$('region').value=b.region||$('region').value;$('lat').value=b.lat??'';$('lng').value=b.lng??'';
+ resetForm();$('sector').value=b.sector||'';$('bname').value=(G.find(x=>x.bname)||{}).bname||'';$('country').value=b.country||$('country').value;$('region').value=b.region||$('region').value;$('lat').value=b.lat??'';$('lng').value=b.lng??'';
  await show('add');curBid=b.bid||b.id;photo=b.photo;bm=await createImageBitmap(photo);strokes=[];others=G.map((x,k)=>({st:x.strokes||[],label:k+1}));myLabel=G.length+1;
  $('gpsmsg').textContent='Location copied from the first problem on this photo.';$('drawbox').hidden=false;cv.classList.remove('dr');$('dm').textContent='Draw line';redraw();$('name').focus()}
 $('usep').onclick=async()=>{const M=new Map();(await all()).filter(b=>b.photo).sort((a,b)=>a.created.localeCompare(b.created)).forEach(b=>{const k=b.bid||b.id;if(!M.has(k))M.set(k,b)});
@@ -257,17 +285,18 @@ $('sector').oninput=sugg;$('sector').onfocus=async()=>{await loadSecs();sugg()};
 $('sector').onblur=()=>setTimeout(()=>{$('sugg').hidden=true;const m=secs.find(s=>s.toLowerCase()===$('sector').value.trim().toLowerCase());if(m)$('sector').value=m},250);
 async function renderMore(){const A=await all(),t=+ls.get('lastbk')||0,n=A.filter(b=>new Date(b.created)>t).length;
  $('bkst').textContent=t?`Last backup: ${fmt(t)}. ${n} boulder${n==1?'':'s'} logged since.`:`No backup yet. ${A.length} boulder${A.length==1?'':'s'} stored on this phone only.`;$('mtk').value=ls.get('mtkey')||'';$('cid').value=ls.get('cid')||'';$('gk').value=ls.get('gkey')||'';if(ls.get('cid')&&navigator.onLine)gis().catch(()=>{})}
+const b2d=bl=>new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(bl)});
 let bk=null;const mark=()=>{ls.set('lastbk',Date.now());renderMore()};
 function dlf(f){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
 async function out(f){try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return true}}catch(e){if(e.name==='AbortError')return false}dlf(f);return true}
 $('mkbk').onclick=async()=>{$('bkst').textContent='Preparing backup…';const items=[];
- for(const b of await all())items.push({...b,photo:b.photo?await new Promise(r=>{const f=new FileReader();f.onload=()=>r(f.result);f.readAsDataURL(b.photo)}):null});
+ for(const b of await all())items.push({...b,photo:b.photo?await b2d(b.photo):null,extra:await Promise.all((b.extra||[]).map(b2d))});
  bk=new File([JSON.stringify({app:'boulderlog',v:1,exported:new Date().toISOString(),items})],'boulderlog-backup-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json',{type:'application/json'});
  $('bkout').hidden=false;$('bkst').textContent=`Backup ready: ${items.length} boulders, ${(bk.size/1048576).toFixed(1)} MB.`};
 $('bkshare').onclick=async()=>{if(!bk||!await authed())return;$('bkst').textContent='Uploading to Drive…';try{const f=await upload(bk.name,bk,'Boulder Log backup');mark();$('bkst').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('bkst').textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}};$('bkdl').onclick=()=>{if(bk){dlf(bk);mark()}};
 $('imp').onclick=()=>$('fimp').click();
 $('fimp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.app!=='boulderlog'||!Array.isArray(d.items))throw 0;
- const have=new Set((await all()).map(b=>b.id));let n=0;for(const b of d.items){if(have.has(b.id))continue;if(b.photo)b.photo=await(await fetch(b.photo)).blob();await put(b);n++}
+ const have=new Set((await all()).map(b=>b.id));let n=0;for(const b of d.items){if(have.has(b.id))continue;if(b.photo){if(typeof b.photo!=='string'||!b.photo.startsWith('data:image/'))b.photo=null;else b.photo=await(await fetch(b.photo)).blob()}b.extra=Array.isArray(b.extra)?await Promise.all(b.extra.filter(d=>typeof d==='string'&&d.startsWith('data:image/')).map(async d=>await(await fetch(d)).blob())):[];if(b.video&&!/^https?:\/\//i.test(b.video))b.video='';await put(b);n++}
  $('impmsg').textContent=`Imported ${n} new, skipped ${d.items.length-n} already on this phone.`}catch(_){$('impmsg').textContent='That file is not a Boulder Log backup.'}e.target.value=''};
 $('gpx').onclick=async()=>{const A=(await all()).filter(b=>b.lat!=null);if(!A.length){alert('No boulders with coordinates yet.');return}
  await out(new File([`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Boulder Log" xmlns="http://www.topografix.com/GPX/1/1">\n`+A.map(b=>`<wpt lat="${b.lat}" lon="${b.lng}"><name>${esc(b.name)} ${esc(b.grade)}</name><desc>${esc([b.sector,b.desc].filter(Boolean).join(' - '))}</desc></wpt>`).join('\n')+'\n</gpx>'],'boulders.gpx',{type:'application/gpx+xml'}))};
@@ -310,14 +339,15 @@ function xlsx(rows){const col=i=>String.fromCharCode(65+i),x=s=>String(s).replac
   'xl/_rels/workbook.xml.rels':XH+'<Relationships xmlns="'+P+'"><Relationship Id="rId1" Type="'+R+'/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
   'xl/worksheets/sheet1.xml':XH+'<worksheet xmlns="'+S+'"><sheetData>'+sd+'</sheetData></worksheet>'})}
 const ukcGrade=g=>{g=(g||'').trim();if(/^[3-9][ABC]?\+?$/i.test(g))return'font '+g.toLowerCase();if(/^V(\d+|B)\+?$/i.test(g))return g.toUpperCase();return g};
-function ukcRows(list,butt){const R=[['CLIMB NAME','GRADE','STARS','DESCRIPTION','FIRST ASCENT','HEIGHT','PITCHES','GRADE TYPE','GRADE SYSTEM','SYMBOLS']],add=b=>R.push([b.name,ukcGrade(b.grade),b.stars||0,b.desc||'',b.fa||'','','','','',b.sit?'10':'']);
+function ukcRows(list,butt){const R=[['CLIMB NAME','GRADE','STARS','DESCRIPTION','FIRST ASCENT','HEIGHT','PITCHES','GRADE TYPE','GRADE SYSTEM','SYMBOLS']],add=b=>R.push([b.name,ukcGrade(b.grade),b.stars||0,b.desc||'',ukcFA(b),'','','','',ukcSym(b)]);
  if(butt){const g=new Map();list.forEach(b=>{const k=b.sector||'No sector';g.set(k,[...(g.get(k)||[]),b])});g.forEach((v,k)=>{R.push([k]);v.forEach(add)})}else list.forEach(add);return R}
-async function ukcFile(){const S=[...pdfSet()].sort((a,b)=>a.created.localeCompare(b.created)),safe=s=>s.replace(/[\\\/:*?"<>|]+/g,'-'),nm=k=>'UKC missing climbs - '+safe(k)+'.xlsx';
+async function ukcFile(){const S=[...pdfSet()].filter(b=>!b.proj).sort((a,b)=>a.created.localeCompare(b.created)),safe=s=>s.replace(/[\\\/:*?"<>|]+/g,'-'),nm=k=>'UKC missing climbs - '+safe(k)+'.xlsx';
  if($('ukclvl').value==='r')return new File([xlsx(ukcRows(S,true))],nm([...new Set(S.map(b=>b.region).filter(Boolean))].join(' & ')||'Boulders'),{type:XL});
  const g=new Map();S.forEach(b=>{const k=b.sector||'No sector';g.set(k,[...(g.get(k)||[]),b])});
  if(g.size===1){const[k,v]=[...g][0];return new File([xlsx(ukcRows(v,false))],nm(k),{type:XL})}
  const F={};for(const[k,v]of g)F[nm(k)]=new Uint8Array(await xlsx(ukcRows(v,false)).arrayBuffer());return new File([zipN(F)],'UKC upload files.zip',{type:'application/zip'})}
-$('ukc').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}const S=pdfSet(),mg=S.filter(b=>!b.grade).length;$('ukcs').textContent=S.length+' problem'+(S.length==1?'':'s')+(mg?'. '+mg+' have no grade, which UKC requires.':'.');$('ukcopt').hidden=false};
+$('ukc').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}const S=pdfSet().filter(b=>!b.proj),np=pdfSet().length-S.length,mg=S.filter(b=>!b.grade).length,me=S.filter(b=>faOf(b).s==='me').length;
+ $('ukcs').textContent=S.length+' problem'+(S.length==1?'':'s')+'. '+(np?np+' project'+(np==1?' is':'s are')+' left out. ':'')+(mg?mg+' have no grade, which UKC requires. ':'')+(me?me+' list you as first ascensionist. Check these are genuinely new before uploading.':'');$('ukcopt').hidden=false};
 $('ukcx').onclick=()=>{$('ukcopt').hidden=true};$('ukcsign').onclick=()=>signIn();
 $('ukcphone').onclick=async()=>{const f=await ukcFile();dlf(f);$('ukcs').textContent='Saved '+f.name+' to your phone.'};
 $('ukcdrive').onclick=async()=>{if(!await authed())return;const f=await ukcFile();$('ukcs').textContent='Uploading to Drive…';try{await upload(f.name,f,'UKC missing climbs upload file');$('ukcs').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('ukcs').textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}};
