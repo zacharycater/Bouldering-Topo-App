@@ -42,7 +42,9 @@ button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
 #sugg{border:1px solid var(--line);border-radius:8px;background:var(--card);margin-top:4px;max-height:220px;overflow:auto}#sugg div{padding:12px;border-bottom:1px solid var(--line)}#sugg div:last-child{border:0}
 .ck{display:flex;align-items:center;padding:0 0 0 12px;margin:0}.ck input,#selall,#pdfmap{width:24px;height:24px;padding:0;margin:0;accent-color:var(--acc)}
 .item .x{align-self:center;margin:0 10px 0 auto;padding:8px 10px;border:1px solid var(--red);color:var(--red);background:none;border-radius:8px;font:600 13px system-ui}
-#pdfopt,#ukcopt,#pkopt{position:fixed;inset:0;background:#0007;z-index:4000;display:flex;align-items:flex-end}#pdfopt[hidden],#ukcopt[hidden],#pkopt[hidden]{display:none}
+#pdfopt,#ukcopt,#pkopt,#ordopt,#xpopt,#satopt{position:fixed;inset:0;background:#0007;z-index:4000;display:flex;align-items:flex-end}#pdfopt[hidden],#ukcopt[hidden],#pkopt[hidden],#ordopt[hidden],#xpopt[hidden],#satopt[hidden]{display:none}
+.gb{display:flex;height:10px;border-radius:5px;overflow:hidden;background:var(--line);margin:4px 0}.gl{font-size:12px}.gl i{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:3px}.gbr{margin:0 0 8px}#gband{margin:0 0 10px}#satmap{height:56vh;border-radius:10px;margin:8px 0}
+select.w{width:100%;padding:11px;font:inherit;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);margin-bottom:8px}
 .sheet{background:var(--card);width:100%;padding:16px 16px calc(16px + env(safe-area-inset-bottom));border-radius:14px 14px 0 0}.sheet button{display:block;width:100%}#v-more button{display:block;width:100%}#v-more .row button{width:auto}
 .bar{display:flex;gap:8px;margin-bottom:12px}.bar select{flex:1;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--card);color:var(--ink);font:inherit}.bar button{margin:0}
 #v-map{position:relative}#mapbar{position:absolute;top:10px;right:10px;z-index:1000;display:flex;flex-direction:column;gap:6px;align-items:flex-end}#mapbar button{margin:0;box-shadow:0 1px 4px #0006}#mapbar span{background:var(--card);color:var(--ink);padding:4px 8px;border-radius:6px;font-size:13px}
@@ -50,9 +52,11 @@ button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
 </style></head><body>
 <header><h1 id="ttl">Topo Creator</h1><span id="net"></span></header>
 <main>
-<section id="v-list"><div class="bar"><select id="fs"></select><select id="fg"></select></div><div class="bar"><button class="s" id="pdf" type="button" style="flex:1">Export PDF</button><button class="s" id="ukc" type="button" style="flex:1">UKC file</button></div><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="selall">Select all shown</label><div id="items"></div></section>
+<section id="v-list"><div class="bar"><select id="fs"></select><select id="fg"></select></div><div class="bar"><button class="s" id="pdf" type="button" style="flex:1">Export PDF</button><button class="s" id="ukc" type="button" style="flex:1">UKC file</button></div><div class="bar"><button class="s" id="ord" type="button" style="flex:1">Reorder problems</button><button class="s" id="xp" type="button" style="flex:1">theCrag / The Topo</button></div><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="selall">Select all shown</label><div id="gband"></div><div id="items"></div></section>
 <section id="v-map"><div id="map"></div><div id="mapbar"><button class="p" id="sat" type="button">Satellite</button><span>Tiles you view are kept for offline use</span></div><div id="gattr" hidden style="position:absolute;left:6px;bottom:6px;z-index:1000;background:#fffc;padding:2px 6px;font-size:11px;border-radius:4px;color:#000"></div></section>
 <section id="v-add">
+ <div id="viewbox" hidden><label>This photo shows</label><select id="viewof" class="w"></select><p class="m" id="viewnote"></p></div>
+<div id="pf1">
  <label>Problem name</label><input id="name" placeholder="Proposed name" autocomplete="off">
  <label>Stars</label><div id="stars" class="row"></div>
  <button class="s tg" id="sit" type="button" style="width:100%">Sit start</button>
@@ -62,22 +66,29 @@ button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
  <button class="s tg" id="proj" type="button" style="width:100%;margin-top:14px">Project (not climbed yet)</button>
  <div id="faall"><label>First ascent</label><div class="row" id="fas"></div>
  <div id="fabox"><label>First ascent by</label><input id="fa" value="Zach Cater" autocomplete="off"><label>First ascent date (year or full date)</label><input id="fad" placeholder="e.g. 2026 or 2026-11-24" autocomplete="off"></div></div>
+</div>
  <div class="row"><div><label>Country</label><input id="country" value="India" autocomplete="off"></div><div><label>Region</label><input id="region" value="Hampi" autocomplete="off"></div></div>
  <label>Sector (optional)</label><input id="sector" placeholder="e.g. Hemakuta Hill" autocomplete="off"><div id="sugg" hidden></div>
- <label>Boulder name (optional)</label><input id="bname" placeholder="e.g. Banana Boulder" autocomplete="off"><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist>
+ <label>Boulder name (optional)</label><input id="bname" placeholder="e.g. Banana Boulder" autocomplete="off"><div id="pfg"><label>Grade</label><input id="grade" list="grades" placeholder="e.g. 6B or V4"><datalist id="grades"></datalist></div>
  <label>Photo</label>
  <div class="row"><button class="p" id="cam" type="button">Take photo</button><button class="s" id="gal" type="button">Choose photo</button></div>
+ <button class="s" id="sat" type="button" style="width:100%">Draw on a satellite view</button>
  <button class="s" id="usep" type="button" style="width:100%">Use a logged photo</button>
  <input id="fcam" type="file" accept="image/*" capture="environment" hidden><input id="fgal" type="file" accept="image/*" hidden>
  <div id="drawbox" hidden>
   <canvas class="topo" id="cv"></canvas>
-  <p class="m" style="margin:6px 0">Scroll freely. Tap Draw line to trace the line, then Done to scroll again.</p>
-  <div class="row"><button class="p" id="dm" type="button">Draw line</button><button class="s" id="undo" type="button">Undo</button><button class="s" id="clr" type="button">Clear</button></div>
+  <p class="m" style="margin:6px 0">Pick a tool and mark the photo. Choose Scroll to move the page again.</p>
+  <div class="row"><button class="p" id="m-scroll" type="button">Scroll</button><button class="s" id="m-free" type="button">Freehand</button><button class="s" id="m-tap" type="button">Tap points</button></div>
+  <div class="row"><button class="s" id="m-start" type="button">Start</button><button class="s" id="m-top" type="button">Top</button><button class="s" id="tapend" type="button" hidden>Finish line</button></div>
+  <div class="row"><button class="s" id="undo" type="button">Undo</button><button class="s" id="clr" type="button">Clear</button></div>
   <button class="s" id="rot" type="button" style="width:100%">Rotate photo 90°</button>
  </div>
+ <div id="morebox" hidden><label>Other photos of this problem</label><div class="chips" id="mth"></div></div>
+ <div id="pf2">
  <label>Description</label><textarea id="desc" rows="3" placeholder="Start, line, top-out, landing…"></textarea>
  <label>Extra photos</label><button class="s" id="xadd" type="button" style="width:100%">Add photos</button><input id="fx" type="file" accept="image/*" multiple hidden><div class="chips" id="xth" style="margin-top:8px"></div>
  <label>Beta video link (optional)</label><input id="video" placeholder="https://..." inputmode="url" autocomplete="off">
+</div>
  <label>Date and time</label><input id="when" type="datetime-local">
  <label>Location</label>
  <div class="row"><input id="lat" inputmode="decimal" placeholder="Latitude (15.3350)"><input id="lng" inputmode="decimal" placeholder="Longitude (76.4600)"></div>
@@ -105,7 +116,10 @@ button.s.tg.on{background:var(--acc);color:var(--acc-t);border-color:var(--acc)}
 </main>
 <div id="pdfopt" hidden><div class="sheet"><b>Export PDF</b><p class="m" id="pdfs"></p><label style="margin-top:0">File name</label><input id="pdfname" autocomplete="off" style="margin-bottom:10px"><label style="margin-top:0">Region and country (under the title)</label><input id="pdfreg" autocomplete="off" placeholder="e.g. Hampi, India" style="margin-bottom:10px"><label style="display:flex;align-items:center;gap:10px;margin:0 0 10px"><input type="checkbox" id="pdfmap" checked>Include map page</label><button class="p" id="pdfphone" type="button">Save to phone</button><button class="p" id="pdfdrive" type="button">Upload to Google Drive</button><button class="s" id="pdfsign" type="button">Sign in to Google Drive</button><button class="s" id="pdfx" type="button">Close</button></div></div>
 <div id="pkopt" hidden><div class="sheet"><b>Choose a logged photo</b><p class="m">Tap a photo to add another problem on it.</p><div id="pkg"></div><button class="s" id="pkx" type="button">Close</button></div></div>
-<div id="ukcopt" hidden><div class="sheet"><b>UKC upload file</b><p class="m" id="ukcs"></p><label style="margin-top:0">The UKC crag is your</label><select id="ukclvl"><option value="r">Region (sectors become buttresses)</option><option value="s">Sector (one file per sector)</option></select><button class="p" id="ukcphone" type="button">Save to phone</button><button class="p" id="ukcdrive" type="button">Upload to Google Drive</button><button class="s" id="ukcsign" type="button">Sign in to Google Drive</button><button class="s" id="ukcx" type="button">Close</button></div></div>
+<div id="ukcopt" hidden><div class="sheet"><b>UKC upload file</b><p class="m" id="ukcs"></p><label style="margin-top:0">The UKC crag is your</label><select id="ukclvl" class="w"><option value="r">Region, sectors are buttresses</option><option value="rb">Region, boulder names are buttresses</option><option value="s">Sector, one file per sector</option><option value="sb">Sector, one file per sector, boulder names are buttresses</option></select><button class="p" id="ukcphone" type="button">Save to phone</button><button class="p" id="ukcdrive" type="button">Upload to Google Drive</button><button class="s" id="ukcsign" type="button">Sign in to Google Drive</button><button class="s" id="ukcx" type="button">Close</button></div></div>
+<div id="ordopt" hidden><div class="sheet" style="max-height:85vh;overflow:auto"><b>Order problems</b><p class="m">Left to right order, used by the UKC file and the theCrag table. Pick a sector, then move problems up or down. With boulder buttresses, boulders follow the order of their first problem.</p><select id="ordsec" class="w"></select><div id="ordl"></div><button class="s" id="ordx" type="button">Done</button></div></div>
+<div id="xpopt" hidden><div class="sheet"><b>Export for theCrag or The Topo</b><p class="m" id="xps"></p><select id="xpkind" class="w"><option value="crag">theCrag: route table (CSV) and photos</option><option value="topo">The Topo: photos and text per boulder</option></select><button class="p" id="xpphone" type="button">Save to phone</button><button class="p" id="xpdrive" type="button">Upload to Google Drive</button><button class="s" id="xpsign" type="button">Sign in to Google Drive</button><button class="s" id="xpx" type="button">Close</button></div></div>
+<div id="satopt" hidden><div class="sheet"><b>Satellite view</b><div id="satmap"></div><p class="m" id="sats"></p><button class="p" id="satgo" type="button">Use this view as the photo</button><button class="s" id="satx" type="button">Cancel</button></div></div>
 <div id="upd">New version ready. Tap to reload.</div>
 <nav><button data-v="list" class="on">Topos</button><button data-v="map">Map</button><button data-v="add">Add</button><button data-v="more">More</button></nav>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
@@ -127,31 +141,49 @@ const faText=b=>{if(b.proj)return'Project (not yet climbed)';const f=faOf(b);ret
 const ukcFA=b=>{const f=faOf(b);return[f.name,f.date].filter(Boolean).join(', ')};
 const propList=b=>[sname(b.steep),...(b.props||[]).map(pname),b.sit?'Sit start':''].filter(Boolean);
 const ukcSym=b=>[...(b.props||[]).map(k=>(PROPS.find(p=>p[0]===k)||[])[2]),b.sit?'10':null].filter(Boolean).map(Number).sort((a,b)=>a-b).join(',');
+const bidOf=b=>b.bid||b.id,blOf=b=>b.blid||bidOf(b),byCreated=(a,b)=>a.created.localeCompare(b.created),ordSort=(a,b)=>(a.ord??1e9)-(b.ord??1e9)||byCreated(a,b);
+const viewsOf=b=>{const v=[];if(b.photo)v.push({b,bid:bidOf(b),photo:b.photo,strokes:b.strokes||[],mk:b.mk});(b.more||[]).forEach(m=>{if(m&&m.photo)v.push({b,bid:m.bid,photo:m.photo,strokes:m.strokes||[],mk:m.mk})});return v};
+function lblMap(A){const M=new Map(),C=new Map(),by=new Map();A.forEach(x=>{const k=blOf(x);by.set(k,[...(by.get(k)||[]),x])});by.forEach((g,k)=>{g.sort(byCreated);g.forEach((x,i)=>M.set(x.id,i+1));C.set(k,g.length)});return{M,C}}
+const othersFor=(A,M,bid,ex)=>A.flatMap(x=>x.id===ex?[]:viewsOf(x).filter(v=>v.bid===bid).map(v=>({st:v.strokes,mk:v.mk,label:M.get(x.id)})));
+function blds(PS){const BM=new Map();PS.forEach(b=>{const k=blOf(b);BM.set(k,[...(BM.get(k)||[]),b])});
+ return[...BM.values()].map(g=>{g.sort(byCreated);const bids=[],G=new Map();g.forEach((b,k)=>viewsOf(b).forEach(v=>{if(!G.has(v.bid)){G.set(v.bid,[]);bids.push(v.bid)}G.get(v.bid).push({b,k,strokes:v.strokes,mk:v.mk,photo:v.photo})}));return{g,bids,G}}).sort((a,b)=>(a.g[0].sector||'').localeCompare(b.g[0].sector||'')||byCreated(a.g[0],b.g[0]))}
+const GF=['3','4','5','5+','6A','6A+','6B','6B+','6C','6C+','7A','7A+','7B','7B+','7C','7C+','8A','8A+','8B','8B+','8C'],GVm={0:1,1:2,2:3,3:4,4:6,5:8,6:10,7:11,8:12,9:14,10:15,11:16,12:17,13:18,14:19,15:20,16:20,17:20},GB=[['≤5+','#3aa655',0,3],['6A–6B+','#e5c100',4,7],['6C–7A+','#e08a00',8,11],['7B+','#d6342a',12,99]];
+const gidx=g=>{g=(g||'').trim().toUpperCase();const v=g.match(/^V(\d+)\+?$/);if(v)return GVm[+v[1]]??null;const i=GF.indexOf(g);return i<0?null:i};
+function gband(list){const cnt=GB.map(()=>0);let u=0;list.forEach(b=>{const i=gidx(b.grade);if(i==null){u++;return}cnt[GB.findIndex(x=>i>=x[2]&&i<=x[3])]++});const seg=GB.map((x,j)=>[x[0],x[1],cnt[j]]).concat([['?','#8a8f8b',u]]).filter(x=>x[2]);
+ return '<div class="gb">'+seg.map(x=>'<span style="flex:'+x[2]+';background:'+x[1]+'"></span>').join('')+'</div><div class="m gl">'+seg.map(x=>'<i style="background:'+x[1]+'"></i>'+x[2]+' '+x[0]).join(' &nbsp; ')+'</div>'}
 function net(){$('net').textContent=navigator.onLine?'Online':'Offline';$('net').className=navigator.onLine?'':'off'}
 addEventListener('online',net);addEventListener('offline',net);net();
 
 // ---- drawing ----
-let bm=null,strokes=[],cur=null;
+let bm=null,strokes=[],cur=null,mk={s:null,t:null},tapOpen=false,dmode='';
+const vpt=p=>Array.isArray(p)&&p.length===2&&p.every(n=>typeof n==='number'&&isFinite(n))?[p[0],p[1]]:null,cleanMk=m=>({s:m?vpt(m.s):null,t:m?vpt(m.t):null}),noLine=b=>!viewsOf(b).some(v=>v.strokes.length),nlTxt=l=>{const n=(l||pdfSet()).filter(noLine).length;return n?' '+n+' problem'+(n==1?' has':'s have')+' no line drawn.':''};
 const LC=['#e5382b','#1f7ae0','#18a058','#e08a00','#8e44ad','#00a5b8'];
-function ln(c,w,h,st,col,lab){c.lineCap=c.lineJoin='round';for(const s of st){if(!s.length)continue;const p=()=>{c.beginPath();s.forEach(([x,y],i)=>i?c.lineTo(x*w,y*h):c.moveTo(x*w,y*h))};
- p();c.lineWidth=w*.017;c.strokeStyle='#fff';c.stroke();p();c.lineWidth=w*.009;c.strokeStyle=col;c.stroke();
- c.beginPath();c.arc(s[0][0]*w,s[0][1]*h,w*.016,0,7);c.fillStyle=col;c.fill();c.lineWidth=w*.005;c.strokeStyle='#fff';c.stroke();
- if(lab){c.fillStyle='#fff';c.font='bold '+Math.round(w*.02)+'px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(lab,s[0][0]*w,s[0][1]*h+1)}}}
-function draw(cv,bmp,st,oth,lab){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getContext('2d');c.drawImage(bmp,0,0);(oth||[]).forEach(o=>ln(c,cv.width,cv.height,o.st,'#8a8f8b',o.label));ln(c,cv.width,cv.height,st,LC[((lab||1)-1)%6],lab&&(oth||[]).length?lab:0)}
-function drawGroup(cv,bmp,G){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getContext('2d');c.drawImage(bmp,0,0);G.forEach((b,k)=>ln(c,cv.width,cv.height,b.strokes||[],LC[k%6],G.length>1?k+1:0))}
+function ln(c,w,h,st,col,lab,mk,mode){c.save();c.lineCap=c.lineJoin='round';if(mode<0)c.globalAlpha=.3;const bw=mode>0?1.5:1,hs=!!(mk&&mk.s);
+ const dot=(x,y)=>{c.beginPath();c.arc(x*w,y*h,w*.016*bw,0,7);c.fillStyle=col;c.fill();c.lineWidth=w*.005;c.strokeStyle='#fff';c.stroke();if(lab){c.fillStyle='#fff';c.font='bold '+Math.round(w*.02*bw)+'px sans-serif';c.textAlign='center';c.textBaseline='middle';c.fillText(lab,x*w,y*h+1)}};
+ for(const s of st){if(!s.length)continue;const p=()=>{c.beginPath();c.moveTo(s[0][0]*w,s[0][1]*h);if(s.length<3)s.slice(1).forEach(([x,y])=>c.lineTo(x*w,y*h));else{for(let i=1;i<s.length-1;i++){const[x,y]=s[i],[nx,ny]=s[i+1];c.quadraticCurveTo(x*w,y*h,(x+nx)/2*w,(y+ny)/2*h)}const l=s[s.length-1];c.lineTo(l[0]*w,l[1]*h)}};
+  if(mode>0){c.shadowColor='rgba(0,0,0,.65)';c.shadowBlur=w*.012}
+  p();c.lineWidth=w*.017*bw;c.strokeStyle='#fff';c.stroke();c.shadowBlur=0;p();c.lineWidth=w*.009*bw;c.strokeStyle=col;c.stroke();
+  if(!hs)dot(s[0][0],s[0][1])}
+ if(hs)dot(mk.s[0],mk.s[1]);
+ if(mk&&mk.t){const x=mk.t[0]*w,y=mk.t[1]*h,r=w*.02*bw;c.beginPath();c.moveTo(x,y-r);c.lineTo(x-r,y+r*.8);c.lineTo(x+r,y+r*.8);c.closePath();c.fillStyle=col;c.fill();c.lineWidth=w*.005;c.strokeStyle='#fff';c.stroke()}
+ c.restore()}
+function draw(cv,bmp,st,oth,lab,shw,mk){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getContext('2d');c.drawImage(bmp,0,0);(oth||[]).forEach(o=>ln(c,cv.width,cv.height,o.st,'#8a8f8b',o.label,o.mk));ln(c,cv.width,cv.height,st,LC[((lab||1)-1)%6],lab&&shw?lab:0,mk)}
+function drawGroup(cv,bmp,G,tot,sel){cv.width=bmp.width;cv.height=bmp.height;const c=cv.getContext('2d');c.drawImage(bmp,0,0);tot=tot||G.length;sel=sel==null?null:sel;const ks=G.map((b,i)=>b.k??i),o=[...G.keys()];if(sel!=null)o.sort((a,b)=>(ks[a]===sel)-(ks[b]===sel));o.forEach(i=>{const b=G[i],k=ks[i];ln(c,cv.width,cv.height,b.strokes||[],LC[k%6],tot>1?k+1:0,b.mk,sel==null?0:(k===sel?1:-1))})}
 async function shrink(file){const b=await createImageBitmap(file),k=Math.min(1,1600/Math.max(b.width,b.height)),c=document.createElement('canvas');c.width=Math.round(b.width*k);c.height=Math.round(b.height*k);c.getContext('2d').drawImage(b,0,0,c.width,c.height);return new Promise(r=>c.toBlob(r,'image/jpeg',.82))}
-async function pick(f){if(!f)return;photo=await shrink(f);bm=await createImageBitmap(photo);strokes=[];curBid=null;others=[];myLabel=1;$('drawbox').hidden=false;$('cv').classList.remove('dr');$('dm').textContent='Draw line';redraw()}
+async function pick(f){if(!f)return;photo=await shrink(f);bm=await createImageBitmap(photo);strokes=[];mk={s:null,t:null};curBid=null;others=[];myLabel=viewOf?vLabel:(editing?myLabel:(curBl?blN+1:1));$('drawbox').hidden=false;$('cv').classList.remove('dr');setMode('');redraw()}
 let photo=null;
 $('cam').onclick=()=>$('fcam').click();$('gal').onclick=()=>$('fgal').click();
 $('fcam').onchange=e=>pick(e.target.files[0]);$('fgal').onchange=e=>pick(e.target.files[0]);
 const cv=$('cv'),pt=e=>{const r=cv.getBoundingClientRect();return[(e.clientX-r.left)/r.width,(e.clientY-r.top)/r.height]};
-cv.onpointerdown=e=>{if(!cv.classList.contains('dr'))return;cv.setPointerCapture(e.pointerId);cur=[pt(e)];strokes.push(cur);redraw()};
-cv.onpointermove=e=>{if(!cur)return;cur.push(pt(e));redraw()};
+function setMode(m){dmode=m;tapOpen=false;cv.classList.toggle('dr',!!m);[['','scroll'],['free','free'],['tap','tap'],['start','start'],['top','top']].forEach(([k,id])=>{$('m-'+id).className=dmode===k?'p':'s'});$('tapend').hidden=m!=='tap'}
+[['','scroll'],['free','free'],['tap','tap'],['start','start'],['top','top']].forEach(([k,id])=>{$('m-'+id).onclick=()=>setMode(k)});$('tapend').onclick=()=>{tapOpen=false};
+cv.onpointerdown=e=>{if(!dmode)return;const q=pt(e);if(dmode==='free'){cv.setPointerCapture(e.pointerId);cur=[q];strokes.push(cur)}else if(dmode==='tap'){if(!tapOpen){strokes.push([q]);tapOpen=true}else strokes[strokes.length-1].push(q)}else if(dmode==='start')mk.s=q;else if(dmode==='top')mk.t=q;redraw()};
+cv.onpointermove=e=>{if(dmode!=='free'||!cur)return;cur.push(pt(e));redraw()};
 cv.onpointerup=cv.onpointercancel=()=>{cur=null};
-$('undo').onclick=()=>{strokes.pop();redraw()};$('clr').onclick=()=>{strokes=[];redraw()};
-$('dm').onclick=()=>{const on=cv.classList.toggle('dr');$('dm').textContent=on?'Done':'Draw line'};
+$('undo').onclick=()=>{if(dmode==='start'&&mk.s)mk.s=null;else if(dmode==='top'&&mk.t)mk.t=null;else if(tapOpen){const t=strokes[strokes.length-1];t.pop();if(!t.length){strokes.pop();tapOpen=false}}else strokes.pop();redraw()};
+$('clr').onclick=()=>{if(!strokes.length&&!mk.s&&!mk.t)return;if(confirm('Clear the line and markers?')){strokes=[];mk={s:null,t:null};tapOpen=false;redraw()}};
 $('rot').onclick=async()=>{if(!bm)return;if(others.length){alert('Other problems share this photo, so it cannot be rotated. Rotate it before adding more problems.');return}const c=document.createElement('canvas');c.width=bm.height;c.height=bm.width;const x=c.getContext('2d');x.translate(c.width,0);x.rotate(Math.PI/2);x.drawImage(bm,0,0);
- photo=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));bm=await createImageBitmap(photo);strokes=strokes.map(s=>s.map(([a,b])=>[1-b,a]));redraw()};
+ photo=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));bm=await createImageBitmap(photo);strokes=strokes.map(s=>s.map(([a,b])=>[1-b,a]));mk={s:mk.s&&[1-mk.s[1],mk.s[0]],t:mk.t&&[1-mk.t[1],mk.t[0]]};redraw()};
 
 // ---- GPS ----
 function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS not available. Enter coordinates by hand.';return}
@@ -159,8 +191,10 @@ function gps(){const m=$('gpsmsg');if(!navigator.geolocation){m.textContent='GPS
  navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(6);$('lng').value=p.coords.longitude.toFixed(6);m.textContent='GPS fix, accuracy about '+Math.round(p.coords.accuracy)+' m'},
  ()=>{m.textContent='No GPS fix. Enter coordinates by hand or try again outside.'},{enableHighAccuracy:true,timeout:25000,maximumAge:20000})}
 $('regps').onclick=gps;
-let editing=null,stars=0,sit=false,others=[],myLabel=1,curBid=null,fas='me',proj=false,steep='',props=new Set(),extra=[];
-function redraw(){draw(cv,bm,strokes,others,myLabel)}
+let curBl=null,more=[],viewOf='',blN=0,vLabel=1,editing=null,stars=0,sit=false,others=[],myLabel=1,curBid=null,fas='me',proj=false,steep='',props=new Set(),extra=[];
+function redraw(){draw(cv,bm,strokes,others,myLabel,myLabel>1||blN>1||others.length>0,mk)}
+function uiMore(){const bx=$('morebox'),t=$('mth');t.innerHTML='';bx.hidden=!more.length;more.forEach((m,i)=>{const w=document.createElement('span');w.style.cssText='position:relative;display:inline-block';const im=document.createElement('img');im.src=URL.createObjectURL(m.photo);im.style.cssText='width:64px;height:64px;object-fit:cover;border-radius:8px';const x=document.createElement('button');x.type='button';x.textContent='×';x.className='s';x.style.cssText='position:absolute;top:-6px;right:-6px;padding:0 7px;margin:0;border-radius:50%';x.onclick=()=>{more.splice(i,1);uiMore()};w.append(im,x);t.appendChild(w)})}
+function uiMode(){const v=!!viewOf;['pf1','pfg','pf2'].forEach(i=>$(i).hidden=v);$('viewnote').textContent=v?'Draw this problem on the new photo. Only the photo and line are added; the problem keeps its own grade, description and other details.':''}
 function drawStars(){const s=$('stars');s.innerHTML='';for(let i=1;i<=3;i++){const b=document.createElement('button');b.type='button';b.className='s star';b.textContent=i<=stars?'★':'☆';b.onclick=()=>{stars=stars===i?i-1:i;drawStars()};s.appendChild(b)}}
 function sitUI(){$('sit').classList.toggle('on',sit);$('sit').textContent=sit?'Sit start: yes':'Sit start';uiProps()}
 $('sit').onclick=()=>{sit=!sit;sitUI()};
@@ -176,14 +210,19 @@ function uiExtra(){const t=$('xth');t.innerHTML='';extra.forEach((bl,i)=>{const 
 $('xadd').onclick=()=>$('fx').click();
 $('fx').onchange=async e=>{for(const f of [...e.target.files]){if(extra.length>=6){alert('Up to 6 extra photos.');break}extra.push(await shrink(f))}e.target.value='';uiExtra()};
 drawStars();sitUI();uiFA();uiExtra();uiProj();$('fad').value=''+new Date().getFullYear();
-function resetForm(){editing=null;['name','sector','bname','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('fad').value=''+new Date().getFullYear();$('video').value='';fas='me';proj=false;steep='';props=new Set();extra=[];uiFA();uiExtra();uiProj();$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');$('dm').textContent='Draw line';$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder';curBid=null;others=[];myLabel=1;stars=0;sit=false;drawStars();sitUI()}
+function resetForm(){editing=null;['name','sector','bname','grade','desc','lat','lng'].forEach(i=>$(i).value='');$('fa').value='Zach Cater';$('fad').value=''+new Date().getFullYear();$('video').value='';fas='me';proj=false;steep='';props=new Set();extra=[];uiFA();uiExtra();uiProj();$('country').value=ls.get('hcountry')||'India';$('region').value=ls.get('hregion')||'Hampi';$('when').value='';photo=bm=null;strokes=[];$('drawbox').hidden=true;cv.classList.remove('dr');setMode('');$('fcam').value=$('fgal').value='';$('cancel').hidden=true;$('save').textContent='Save boulder';curBid=null;others=[];myLabel=1;stars=0;sit=false;mk={s:null,t:null};tapOpen=false;curBl=null;more=[];viewOf='';blN=0;vLabel=1;$('viewbox').hidden=true;$('viewof').innerHTML='';uiMore();uiMode();drawStars();sitUI()}
 $('cancel').onclick=()=>{resetForm();show('list')};
-async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('bname').value=b.bname||'';{const f=faOf(b);fas=f.s;proj=!!b.proj;$('fa').value=f.name;$('fad').value=f.date;steep=b.steep||'';props=new Set(b.props||[]);extra=[...(b.extra||[])];$('video').value=b.video||'';uiFA();uiExtra();uiProj()}$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];curBid=b.bid||null;{const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));myLabel=Math.max(1,G.findIndex(x=>x.id===b.id)+1);others=G.filter(x=>x.id!==b.id).map(x=>({st:x.strokes||[],label:G.indexOf(x)+1}))}if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;redraw()}$('cancel').hidden=false;$('save').textContent='Save changes';stars=b.stars||0;sit=!!b.sit;drawStars();sitUI()}
+async function edit(b){editing=b;await show('add');$('name').value=b.name;$('sector').value=b.sector||'';$('bname').value=b.bname||'';{const f=faOf(b);fas=f.s;proj=!!b.proj;$('fa').value=f.name;$('fad').value=f.date;steep=b.steep||'';props=new Set(b.props||[]);extra=[...(b.extra||[])];$('video').value=b.video||'';uiFA();uiExtra();uiProj()}$('country').value=b.country??'';$('region').value=b.region??'';setWhen(b.created);$('grade').value=b.grade||'';$('desc').value=b.desc||'';$('lat').value=b.lat??'';$('lng').value=b.lng??'';$('gpsmsg').textContent='';photo=b.photo;strokes=b.strokes||[];curBid=b.bid||null;{const A=await all(),{M,C}=lblMap(A);mk=cleanMk(b.mk);curBl=b.blid||null;blN=C.get(blOf(b))||1;myLabel=M.get(b.id)||1;more=[...(b.more||[])];viewOf='';$('viewbox').hidden=true;others=othersFor(A,M,bidOf(b),b.id);uiMore();uiMode()}if(photo){bm=await createImageBitmap(photo);$('drawbox').hidden=false;redraw()}$('cancel').hidden=false;$('save').textContent='Save changes';stars=b.stars||0;sit=!!b.sit;drawStars();sitUI()}
 
 // ---- save ----
-$('save').onclick=async()=>{const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}const vid=$('video').value.trim();if(vid&&!/^https?:\/\//i.test(vid)){alert('The video link must start with http:// or https://');return}
+$('save').onclick=async()=>{
+ if(viewOf){if(!photo||!strokes.length){alert('Add the photo and draw the line for this view first.');return}
+  const t=(await all()).find(x=>x.id===viewOf);if(!t){alert('That problem no longer exists.');return}
+  t.more=[...(t.more||[]),{bid:curBid||('v'+Date.now()),photo,strokes,mk:cleanMk(mk)}];await put(t);const tid=t.id;resetForm();detail(tid);return}
+ const name=$('name').value.trim();if(!name){alert('Add a problem name first.');return}const vid=$('video').value.trim();if(vid&&!/^https?:\/\//i.test(vid)){alert('The video link must start with http:// or https://');return}
+ if(!strokes.length&&!more.some(m=>m.strokes&&m.strokes.length)&&!confirm((photo?'No line is drawn on the photo':'There is no photo or line')+' for this problem. Save anyway?'))return;
  const lat=parseFloat($('lat').value),lng=parseFloat($('lng').value);
- const sv={id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),bname:$('bname').value.trim(),fa:fas==='unknown'||proj?'':$('fa').value.trim(),fad:fas==='unknown'||proj?'':$('fad').value.trim(),fas:proj?'unknown':fas,proj,steep,props:[...props],extra,video:vid,stars,sit,bid:curBid,country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()};await put(sv);ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());const sid=sv.id,hp=!!photo&&!editing;resetForm();if(hp)detail(sid);else show('list')};
+ const sv={...(editing||{}),id:editing?editing.id:Date.now()+'',sector:$('sector').value.trim(),bname:$('bname').value.trim(),fa:fas==='unknown'||proj?'':$('fa').value.trim(),fad:fas==='unknown'||proj?'':$('fad').value.trim(),fas:proj?'unknown':fas,proj,steep,props:[...props],extra,video:vid,stars,sit,bid:curBid,blid:curBl||undefined,mk:cleanMk(mk),more:[...more],country:$('country').value.trim(),region:$('region').value.trim(),name,grade:$('grade').value.trim(),desc:$('desc').value.trim(),photo,strokes,lat:isNaN(lat)?null:lat,lng:isNaN(lng)?null:lng,created:new Date($('when').value||Date.now()).toISOString()};await put(sv);ls.set('hcountry',$('country').value.trim());ls.set('hregion',$('region').value.trim());const sid=sv.id,hp=!!photo&&!editing;resetForm();if(hp)detail(sid);else show('list')};
 
 // ---- views ----
 const T={list:'Boulders',map:'Map',add:'New boulder',detail:'Boulder',more:'More'};let map,layer;
@@ -191,16 +230,16 @@ async function show(v){document.querySelectorAll('section').forEach(s=>s.classLi
  document.querySelectorAll('nav button').forEach(b=>b.classList.toggle('on',b.dataset.v===(v==='detail'?'list':v)));$('ttl').textContent='Topo Creator';
  if(v==='list')await renderList();if(v==='map')await renderMap();if(v==='more')await renderMore();if(v==='add'&&!editing){if(!$('when').value)setWhen();if(!$('lat').value)gps()}}
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{if(b.dataset.v==='add'&&editing)resetForm();show(b.dataset.v)});
-async function thumb(cv,b){const m=await createImageBitmap(b.photo);const k=184/Math.min(m.width,m.height);const t=document.createElement('canvas');draw(t,m,b.strokes);cv.width=cv.height=184;cv.getContext('2d').drawImage(t,(t.width-184/k)/2,(t.height-184/k)/2,184/k,184/k,0,0,184,184)}
+async function thumb(cv,b){const m=await createImageBitmap(b.photo);const k=184/Math.min(m.width,m.height);const t=document.createElement('canvas');draw(t,m,b.strokes,null,0,false,b.mk);cv.width=cv.height=184;cv.getContext('2d').drawImage(t,(t.width-184/k)/2,(t.height-184/k)/2,184/k,184/k,0,0,184,184)}
 let shown=[],sel=new Set();
 async function renderList(){const A=(await all()).sort((a,b)=>b.created.localeCompare(a.created)),fg=$('fg'),fs=$('fs'),pg=fg.value,ps=fs.value,
  gs=[...new Set(A.map(b=>b.grade).filter(Boolean))].sort(),ss=[...new Set(A.map(b=>b.sector).filter(Boolean))].sort((a,b)=>a.localeCompare(b));
  fg.innerHTML='<option value="">All grades</option>'+gs.map(g=>`<option>${esc(g)}</option>`).join('');fg.value=gs.includes(pg)?pg:'';
  fs.innerHTML='<option value="">All sectors</option>'+ss.map(g=>`<option>${esc(g)}</option>`).join('');fs.value=ss.includes(ps)?ps:'';
- const gc=new Map();A.forEach(b=>{const k=b.bid||b.id;gc.set(k,(gc.get(k)||0)+1)});sel=new Set([...sel].filter(id=>A.some(b=>b.id===id)));shown=A.filter(b=>(!fg.value||b.grade===fg.value)&&(!fs.value||b.sector===fs.value));upd();const el=$('items');
+ const gc=lblMap(A).C;sel=new Set([...sel].filter(id=>A.some(b=>b.id===id)));shown=A.filter(b=>(!fg.value||b.grade===fg.value)&&(!fs.value||b.sector===fs.value));upd();const el=$('items');{const by=new Map();shown.forEach(b=>{const k=b.sector||'No sector';by.set(k,[...(by.get(k)||[]),b])});$('gband').innerHTML=[...by].sort((a,b)=>a[0].localeCompare(b[0])).map(([k,v])=>'<div class="gbr"><b>'+esc(k)+'</b> <span class="m">'+v.length+'</span>'+gband(v)+'</div>').join('')}
  if(!shown.length){el.innerHTML='<p class="empty">'+(A.length?'No boulders match these filters.':'No boulders logged yet.<br>Tap Add to log your first.')+'</p>';return}
  el.innerHTML='';for(const b of shown){const d=document.createElement('div');d.className='item';
-  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}${b.bname?' &gt; '+esc(b.bname):''}</div><span class="g">${esc(b.grade)||'?'}</span><span class="st">${'★'.repeat(b.stars||0)}</span>${b.proj?'<span class="m">Project </span>':''}${propList(b).length?'<span class="m">'+propList(b).map(esc).join(', ')+' </span>':''}${gc.get(b.bid||b.id)>1?'<span class="m">'+gc.get(b.bid||b.id)+' on this photo</span>':''}<br><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
+  d.innerHTML=(b.photo?'<canvas></canvas>':'<div class="ph"></div>')+`<div class="t"><b>${esc(b.name)}</b><div class="sec">${esc(b.sector)||'No sector'}${b.bname?' &gt; '+esc(b.bname):''}</div><span class="g">${esc(b.grade)||'?'}</span><span class="st">${'★'.repeat(b.stars||0)}</span>${b.proj?'<span class="m">Project </span>':''}${noLine(b)?'<span class="m" style="color:var(--red)">No line drawn </span>':''}${propList(b).length?'<span class="m">'+propList(b).map(esc).join(', ')+' </span>':''}${gc.get(blOf(b))>1?'<span class="m">'+gc.get(blOf(b))+' problems on this boulder</span>':''}<br><span class="m">${b.lat!=null?b.lat.toFixed(4)+', '+b.lng.toFixed(4):'No coordinates'}</span></div>`;
   const x=document.createElement('button');x.className='x';x.textContent='Delete';x.onclick=async e=>{e.stopPropagation();if(confirm('Delete "'+b.name+'"? This cannot be undone.')){await del(b.id);renderList()}};d.appendChild(x);
   const ck=document.createElement('label');ck.className='ck';ck.onclick=e=>e.stopPropagation();ck.innerHTML='<input type="checkbox">';const cb=ck.firstChild;cb.checked=sel.has(b.id);cb.onchange=()=>{cb.checked?sel.add(b.id):sel.delete(b.id);upd()};d.insertBefore(ck,d.firstChild);
   d.onclick=()=>detail(b.id);el.appendChild(d);if(b.photo)thumb(d.querySelector('canvas'),b)}}
@@ -222,9 +261,8 @@ async function coverMap(pins){const W=1100,H=1000,c=document.createElement('canv
  return{img:c.toDataURL('image/jpeg',.85),ok,W,H}}
 async function makePdf(){
  if(!window.jspdf){alert('PDF tool not loaded. Open the app once with a connection.');return}
- const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),M=new Map(),PS=pdfSet();
- PS.forEach(b=>{const k=b.bid||b.id;M.set(k,[...(M.get(k)||[]),b])});
- const L=[...M.values()].map(g=>g.sort((a,b)=>a.created.localeCompare(b.created))).sort((a,b)=>(a[0].sector||'').localeCompare(b[0].sector||'')||a[0].created.localeCompare(b[0].created)),N=L.length,P=PS.length,cc=g=>g.find(b=>b.lat!=null);
+ const doc=new jspdf.jsPDF({unit:'mm',format:'a4'}),M=new Map(),PS=pdfSet(),cr=()=>{doc.setFont('helvetica','normal').setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288)};
+ const BL=blds(PS),L=BL.map(x=>x.g),N=L.length,P=PS.length,cc=g=>g.find(b=>b.lat!=null);
  if($('pdfmap').checked){const pins=L.map((g,i)=>{const c=cc(g);return c&&{n:i+1,lat:c.lat,lng:c.lng}}).filter(Boolean);
   doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);
   const ts=doc.splitTextToSize([...new Set(PS.map(b=>b.sector).filter(Boolean))].sort().join(', ')||'Boulders',180),tl=ts.slice(0,2);if(ts.length>2)tl[1]+='…';doc.text(tl,15,20);
@@ -232,19 +270,29 @@ async function makePdf(){
   doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90);doc.text(N+' boulder'+(N==1?'':'s')+(P!==N?', '+P+' problems':'')+', '+new Date().toLocaleDateString('en-GB'),15,ty+13);let y=ty+19;
   if(pins.length){const m=await coverMap(pins),w=180,h=w*m.H/m.W;doc.addImage(m.img,'JPEG',15,y,w,h);y+=h+5;if(!m.ok){doc.setFontSize(9);doc.text('Base map unavailable offline. Pins are plotted by coordinates only.',15,y);y+=5}}
   doc.setFontSize(10).setTextColor(0);const y0=y+3,per=Math.max(1,Math.floor((282-y0)/5));
-  L.forEach((g,i)=>{if(i&&i%(2*per)===0)doc.addPage();const pg=Math.floor(i/(2*per)),col=Math.floor(i/per)%2,row=i%per,l1=doc.splitTextToSize((i+1)+'. '+((g.find(b=>b.bname)||{}).bname?g.find(b=>b.bname).bname+': ':'')+g.map(b=>b.name+(b.grade?' ('+b.grade+')':'')).join(', ')+(cc(g)?'':' (no pin)'),90);doc.text(l1[0]+(l1.length>1?'…':''),15+col*95,(pg?20:y0)+row*5)});
-  doc.addPage()}
+  L.forEach((g,i)=>{if(i&&i%(2*per)===0){cr();doc.addPage()}const pg=Math.floor(i/(2*per)),col=Math.floor(i/per)%2,row=i%per,l1=doc.splitTextToSize((i+1)+'. '+((g.find(b=>b.bname)||{}).bname?g.find(b=>b.bname).bname+': ':'')+g.map(b=>b.name+(b.grade?' ('+b.grade+')':'')).join(', ')+(cc(g)?'':' (no pin)'),90);doc.text(l1[0]+(l1.length>1?'…':''),15+col*95,(pg?20:y0)+row*5)});
+  cr();doc.addPage()}
  for(let i=0;i<N;i++){const g=L[i],bn=(g.find(b=>b.bname)||{}).bname,one=g.length===1&&!bn,f=g[0],c=cc(g);if(i)doc.addPage();
   if(c){doc.setFont('helvetica','normal').setFontSize(10).setTextColor(90);doc.text('Coordinates: '+c.lat.toFixed(6)+', '+c.lng.toFixed(6),15,12)}
   doc.setFont('helvetica','bold').setFontSize(20).setTextColor(0);doc.text((i+1)+'. '+(bn||(one?f.name:'Unnamed boulder')),15,22,{maxWidth:150});if(one)doc.text(f.grade||'',195,22,{align:'right'});
   doc.setFont('helvetica','normal').setFontSize(11);doc.text((f.sector||'No sector')+(one?'':'   '+g.length+' problem'+(g.length==1?'':'s')),15,30);
   if(one){doc.text(faText(f)+'   Logged: '+fmt(f.created),15,36);doc.text((f.stars||0)+' of 3 stars',195,30,{align:'right'});const pl=propList(f);if(pl.length)doc.text(pl.join(', '),15,42);if(f.video)doc.text('Beta video: '+f.video,15,47)}
-  let y=one?(f.video?52:46):43;const pb=g.find(b=>b.photo);
-  if(pb){const c2=document.createElement('canvas');drawGroup(c2,await createImageBitmap(pb.photo),g);const k=Math.min(180/c2.width,(one?170:120)/c2.height),w=c2.width*k,h=c2.height*k;doc.addImage(c2.toDataURL('image/jpeg',.85),'JPEG',(210-w)/2,y,w,h);y+=h+8}
-  if(one){doc.text(doc.splitTextToSize(f.desc||'',180).slice(0,18),15,y)}
-  else g.forEach((b,j)=>{if(y>262){doc.addPage();y=20}doc.setFont('helvetica','bold').setFontSize(11).setTextColor(0);doc.text((j+1)+'. '+b.name+'   '+(b.grade||'')+'   '+(b.stars||0)+'/3 stars',15,y);y+=5;
+  let y=one?(f.video?52:46):43;const X=BL[i],G0=X.bids.length?X.G.get(X.bids[0]):null,pb=G0&&G0[0];
+  if(pb){const c2=document.createElement('canvas');drawGroup(c2,await createImageBitmap(pb.photo),G0,g.length);const k=Math.min(180/c2.width,(one?170:120)/c2.height),w=c2.width*k,h=c2.height*k;doc.addImage(c2.toDataURL('image/jpeg',.85),'JPEG',(210-w)/2,y,w,h);y+=h+8}
+  if(one){const dl=doc.splitTextToSize(f.desc||'',180).slice(0,18);doc.text(dl,15,y);y+=dl.length*5+4}
+  else g.forEach((b,j)=>{if(y>262){cr();doc.addPage();y=20}doc.setFont('helvetica','bold').setFontSize(11).setTextColor(0);doc.text((j+1)+'. '+b.name+'   '+(b.grade||'')+'   '+(b.stars||0)+'/3 stars',15,y);y+=5;
    doc.setFont('helvetica','normal').setFontSize(10);const t=doc.splitTextToSize([propList(b).join(', '),b.desc||'',faText(b)+(b.video?'  Video: '+b.video:'')].filter(Boolean).join('  '),180).slice(0,4);if(t.length&&t[0]){doc.text(t,15,y);y+=t.length*4.5}y+=3});
-  doc.setFont('helvetica','normal').setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288);doc.text((i+1)+' / '+N,195,288,{align:'right'})}
+  const xs=g.flatMap((b,j)=>(b.extra||[]).map(bl=>({bl,lab:one?'':(j+1)+'. '+b.name})));
+  if(xs.length){if(y>236){cr();doc.addPage();y=20}doc.setFont('helvetica','bold').setFontSize(10).setTextColor(0);doc.text('Extra photos',15,y);let ry=y+5;
+   for(let k=0;k<xs.length;k++){const col=k%3;if(col===0&&k>0){ry+=48;if(ry>236){cr();doc.addPage();ry=20}}
+    const m=await createImageBitmap(xs[k].bl),sc=Math.min(1,800/Math.max(m.width,m.height)),c3=document.createElement('canvas');c3.width=Math.round(m.width*sc);c3.height=Math.round(m.height*sc);c3.getContext('2d').drawImage(m,0,0,c3.width,c3.height);
+    const kk=Math.min(56/c3.width,42/c3.height),w=c3.width*kk,hh=c3.height*kk,x0=15+col*62;doc.addImage(c3.toDataURL('image/jpeg',.8),'JPEG',x0,ry,w,hh);
+    if(xs[k].lab){doc.setFont('helvetica','normal').setFontSize(8).setTextColor(90);doc.text(doc.splitTextToSize(xs[k].lab,56)[0],x0,ry+hh+3.5)}}}
+  doc.setFont('helvetica','normal').setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288);doc.text((i+1)+' / '+N,195,288,{align:'right'});
+  for(let p=1;p<X.bids.length;p++){const Gp=X.G.get(X.bids[p]);doc.addPage();doc.setFont('helvetica','bold').setFontSize(16).setTextColor(0);doc.text((i+1)+'. '+(bn||(one?f.name:'Unnamed boulder'))+'  (photo '+(p+1)+' of '+X.bids.length+')',15,22,{maxWidth:180});
+   const c4=document.createElement('canvas');drawGroup(c4,await createImageBitmap(Gp[0].photo),Gp,g.length);const k4=Math.min(180/c4.width,200/c4.height),w4=c4.width*k4,h4=c4.height*k4;doc.addImage(c4.toDataURL('image/jpeg',.85),'JPEG',(210-w4)/2,30,w4,h4);
+   let yy=30+h4+8;doc.setFont('helvetica','normal').setFontSize(11).setTextColor(0);if(g.length>1)Gp.forEach(it=>{if(yy>272)return;doc.text((it.k+1)+'. '+it.b.name+'   '+(it.b.grade||''),15,yy);yy+=6});
+   doc.setFontSize(9).setTextColor(110);doc.text('Copyright © Zachary Cater',15,288);doc.text((i+1)+' / '+N,195,288,{align:'right'})}}
  return doc.output('blob')}
 const OSM='https://tile.openstreetmap.org/{z}/{x}/{y}.png',SAT='https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}';const MT='https://api.maptiler.com/tiles/satellite-v2/{z}/{x}/{y}.jpg?key=';let osm,sat,isSat=false;function setSat(){const k=ls.get('mtkey');sat.setUrl(k?MT+k:SAT);sat.options.maxNativeZoom=k?19:17}
 async function renderMap(){if(!map){map=L.map('map').setView([15.335,76.46],13);
@@ -261,21 +309,34 @@ async function gattr(){const el=$('gattr');if(li!==2||!gl){el.hidden=true;return
 $('sat').onclick=async()=>{const names=['Map','Satellite'];if(ls.get('gkey'))names.push('Google');const next=(li+1)%names.length;let nl;
  try{nl=next===0?osm:next===1?sat:(await gLayer()).layer}catch(e){alert('Google tiles failed ('+e.message+'). Check the key, that Map Tiles API and billing are enabled, and that you are online.');return}
  [osm,sat,gl&&gl.layer].forEach(l=>l&&map.hasLayer(l)&&map.removeLayer(l));nl.addTo(map);li=next;$('sat').textContent=names[(li+1)%names.length];gattr()};
-async function detail(id){const b=(await all()).find(x=>x.id===id);if(!b)return;await show('detail');const el=$('v-detail');
- el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div>${b.photo?'<canvas class="topo" id="dc"></canvas><div id="lg"></div><button class="s" id="addp" type="button" style="width:100%">Add another problem on this photo</button>':''}<h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector,b.bname].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}<p class="m">${esc(faText(b))}</p><p class="m">${'★'.repeat(b.stars||0)}${'☆'.repeat(3-(b.stars||0))}</p>${propList(b).length?'<p class="m">'+propList(b).map(esc).join(', ')+'</p>':''}<p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p>${b.video&&/^https?:\/\//i.test(b.video)?'<p><a href="'+esc(b.video)+'" target="_blank" rel="noopener">Beta video</a></p>':''}<div id="xs" class="chips"></div><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
- $('back').onclick=()=>show('list');$('ed').onclick=()=>edit(b);(b.extra||[]).forEach(bl=>{const im=document.createElement('img');im.src=URL.createObjectURL(bl);im.style.cssText='width:96px;height:96px;object-fit:cover;border-radius:8px';im.onclick=()=>window.open(im.src);$('xs').appendChild(im)});
- $('up').onclick=async()=>{if(!b.photo){alert('This boulder has no photo.');return}if(!await authed())return;const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
+async function detail(id){const A=await all(),b=A.find(x=>x.id===id);if(!b)return;await show('detail');const el=$('v-detail');
+ el.innerHTML=`<div class="row"><button class="s" id="back">Back</button><button class="p" id="ed">Edit</button></div><div id="phs"></div><button class="s" id="newph" type="button" style="width:100%">Add another photo of this boulder</button><h2>${esc(b.name)} <span class="g">${esc(b.grade)||'?'}</span></h2>${(b.country||b.region||b.sector)?'<p class="m">'+[b.country,b.region,b.sector,b.bname].filter(Boolean).map(esc).join(' &gt; ')+'</p>':''}<div id="bdband"></div>${noLine(b)?'<p class="m" style="color:var(--red)">No line drawn for this problem yet. Tap Edit to add one.</p>':''}<p class="m">${esc(faText(b))}</p><p class="m">${'★'.repeat(b.stars||0)}${'☆'.repeat(3-(b.stars||0))}</p>${propList(b).length?'<p class="m">'+propList(b).map(esc).join(', ')+'</p>':''}<p class="m">Logged ${fmt(b.created)}</p><p>${esc(b.desc)||'<span class="m">No description.</span>'}</p>${b.video&&/^https?:\/\//i.test(b.video)?'<p><a href="'+esc(b.video)+'" target="_blank" rel="noopener">Beta video</a></p>':''}<div id="xs" class="chips"></div><p class="m">${b.lat!=null?b.lat.toFixed(6)+', '+b.lng.toFixed(6):'No coordinates'}</p><button class="s" id="up" style="width:100%">Upload topo to Drive</button><button class="d" id="rm">Delete boulder</button>`;
+ $('back').onclick=()=>show('list');$('ed').onclick=()=>edit(b);$('newph').onclick=()=>newPhoto(b);(b.extra||[]).forEach(bl=>{const im=document.createElement('img');im.src=URL.createObjectURL(bl);im.style.cssText='width:96px;height:96px;object-fit:cover;border-radius:8px';im.onclick=()=>window.open(im.src);$('xs').appendChild(im)});
+ $('up').onclick=async()=>{if(!b.photo){alert('This boulder has no photo.');return}if(!await authed())return;const c=document.createElement('canvas');draw(c,await createImageBitmap(b.photo),b.strokes,null,0,false,b.mk);const bl=await new Promise(r=>c.toBlob(r,'image/jpeg',.88));
   try{await upload((b.sector?b.sector+' - ':'')+b.name+' '+(b.grade||'')+'.jpg',bl,[faText(b),propList(b).join(', '),b.desc,b.lat!=null&&b.lat+', '+b.lng].filter(Boolean).join('\n'));alert('Uploaded to Drive.')}catch(e){alert('Upload failed ('+e.message+'). Sign in again and retry.');tok=null}};$('rm').onclick=async()=>{if(confirm('Delete this boulder?')){await del(id);show('list')}};
- if(b.photo){const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));drawGroup($('dc'),await createImageBitmap(b.photo),G);
-  if(G.length>1)G.forEach((x,k)=>{const r=document.createElement('div');r.className='lgr';r.innerHTML='<span class="dot" style="background:'+LC[k%6]+'">'+(k+1)+'</span><b>'+esc(x.name)+'</b> '+esc(x.grade)+' '+'★'.repeat(x.stars||0)+(x.sit?' Sit start':'');if(x.id!==b.id)r.onclick=()=>detail(x.id);$('lg').appendChild(r)});
-  $('addp').onclick=()=>startFrom(b)}}
-async function startFrom(b){const G=(await all()).filter(x=>(x.bid||x.id)===(b.bid||b.id)).sort((p,q)=>p.created.localeCompare(q.created));
- resetForm();$('sector').value=b.sector||'';$('bname').value=(G.find(x=>x.bname)||{}).bname||'';$('country').value=b.country||$('country').value;$('region').value=b.region||$('region').value;$('lat').value=b.lat??'';$('lng').value=b.lng??'';
- await show('add');curBid=b.bid||b.id;photo=b.photo;bm=await createImageBitmap(photo);strokes=[];others=G.map((x,k)=>({st:x.strokes||[],label:k+1}));myLabel=G.length+1;
- $('gpsmsg').textContent='Location copied from the first problem on this photo.';$('drawbox').hidden=false;cv.classList.remove('dr');$('dm').textContent='Draw line';redraw();$('name').focus()}
-$('usep').onclick=async()=>{const M=new Map();(await all()).filter(b=>b.photo).sort((a,b)=>a.created.localeCompare(b.created)).forEach(b=>{const k=b.bid||b.id;if(!M.has(k))M.set(k,b)});
+ const BE=A.filter(x=>blOf(x)===blOf(b)),bd=blds(BE)[0],bids=[...bd.bids].sort((p,q)=>(q===bidOf(b))-(p===bidOf(b))),ph=$('phs');
+ const cvs=[];let selK=BE.length>1?bd.g.indexOf(b):null;const paint=()=>{cvs.forEach(o=>drawGroup(o.cv,o.bm,o.G,BE.length,selK));ph.querySelectorAll('.lgr').forEach(r=>{r.style.background=+r.dataset.k===selK?'var(--line)':''})};
+ if(BE.length>1)$('bdband').innerHTML=gband(BE);
+ for(let p=0;p<bids.length;p++){const G=bd.G.get(bids[p]),w=document.createElement('div');
+  w.innerHTML=(bids.length>1?'<p class="m" style="margin:14px 0 0">Photo '+(p+1)+' of '+bids.length+'</p>':'')+'<canvas class="topo"></canvas><div class="lg"></div><button class="s" type="button" style="width:100%">Add another problem on this photo</button>';
+  ph.appendChild(w);const bmx=await createImageBitmap(G[0].photo),cx=w.querySelector('canvas');cvs.push({cv:cx,bm:bmx,G});
+  if(BE.length>1)G.forEach(it=>{const r=document.createElement('div');r.className='lgr';r.dataset.k=it.k;r.style.cssText='display:flex;gap:8px;align-items:center;padding:4px 6px;border-radius:8px;cursor:pointer';r.innerHTML='<span class="dot" style="background:'+LC[it.k%6]+'">'+(it.k+1)+'</span><span style="flex:1"><b>'+esc(it.b.name)+'</b> '+esc(it.b.grade)+' '+'★'.repeat(it.b.stars||0)+(it.b.sit?' Sit start':'')+(noLine(it.b)?' <span style="color:var(--red)">no line</span>':'')+'</span>';r.onclick=()=>{selK=selK===it.k?null:it.k;paint()};
+   if(it.b.id!==b.id){const o=document.createElement('button');o.type='button';o.className='s';o.textContent='Open';o.style.cssText='width:auto;margin:0;padding:6px 12px';o.onclick=e=>{e.stopPropagation();detail(it.b.id)};r.appendChild(o)}w.querySelector('.lg').appendChild(r)});
+  w.querySelector('button').onclick=()=>startFrom(b,bids[p],G[0].photo)}
+ paint()}
+async function startFrom(b,bid,ph){bid=bid||bidOf(b);const A=await all(),{M,C}=lblMap(A),BE=A.filter(x=>blOf(x)===blOf(b));ph=ph||(viewsOf(b).find(v=>v.bid===bid)||{}).photo||b.photo;
+ resetForm();$('sector').value=b.sector||'';$('bname').value=(BE.find(x=>x.bname)||{}).bname||'';$('country').value=b.country||$('country').value;$('region').value=b.region||$('region').value;$('lat').value=b.lat??'';$('lng').value=b.lng??'';
+ await show('add');curBid=bid;curBl=blOf(b);blN=C.get(curBl)||0;photo=ph;bm=await createImageBitmap(photo);strokes=[];mk={s:null,t:null};others=othersFor(A,M,bid,null);myLabel=blN+1;
+ $('gpsmsg').textContent='Location copied from the first problem on this boulder.';$('drawbox').hidden=false;cv.classList.remove('dr');setMode('');redraw();$('name').focus()}
+async function newPhoto(b){const A=await all(),BE=A.filter(x=>blOf(x)===blOf(b)).sort(byCreated);
+ resetForm();$('sector').value=b.sector||'';$('bname').value=(BE.find(x=>x.bname)||{}).bname||'';$('country').value=b.country||$('country').value;$('region').value=b.region||$('region').value;$('lat').value=b.lat??'';$('lng').value=b.lng??'';
+ await show('add');curBl=blOf(b);blN=BE.length;$('viewof').innerHTML='<option value="">A new problem on this photo</option>'+BE.map(x=>'<option value="'+esc(x.id)+'">Another view of: '+esc(x.name)+'</option>').join('');$('viewbox').hidden=false;
+ $('gpsmsg').textContent='New photo for this boulder. Take or choose the photo, then say what it shows.'}
+$('viewof').onchange=async()=>{viewOf=$('viewof').value;const A=await all(),{M}=lblMap(A);vLabel=viewOf?(M.get(viewOf)||1):blN+1;myLabel=vLabel;uiMode();if(bm)redraw()};
+async function useInto(o){const A=await all(),{M}=lblMap(A);photo=o.photo;bm=await createImageBitmap(photo);strokes=[];mk={s:null,t:null};curBid=o.bid;others=othersFor(A,M,o.bid,viewOf||null);myLabel=viewOf?vLabel:blN+1;$('drawbox').hidden=false;cv.classList.remove('dr');setMode('');redraw()}
+$('usep').onclick=async()=>{const M=new Map();(await all()).sort(byCreated).forEach(b=>viewsOf(b).forEach(v=>{if(!M.has(v.bid))M.set(v.bid,{b,bid:v.bid,photo:v.photo,strokes:v.strokes})}));
  if(!M.size){alert('No logged photos yet.');return}const g=$('pkg');g.innerHTML='';
- for(const b of [...M.values()].reverse()){const d=document.createElement('div'),c=document.createElement('canvas'),t=document.createElement('div');t.className='m';t.textContent=(b.sector||'No sector')+' - '+b.name;d.appendChild(c);d.appendChild(t);d.onclick=()=>{$('pkopt').hidden=true;startFrom(b)};g.appendChild(d);thumb(c,b)}$('pkopt').hidden=false};
+ for(const o of [...M.values()].reverse()){const d=document.createElement('div'),c=document.createElement('canvas'),t=document.createElement('div');t.className='m';t.textContent=(o.b.sector||'No sector')+' - '+o.b.name;d.appendChild(c);d.appendChild(t);d.onclick=()=>{$('pkopt').hidden=true;if(!$('viewbox').hidden)useInto(o);else startFrom(o.b,o.bid,o.photo)};g.appendChild(d);thumb(c,{photo:o.photo,strokes:o.strokes})}$('pkopt').hidden=false};
 $('pkx').onclick=()=>{$('pkopt').hidden=true};
 let secs=[];
 async function loadSecs(){secs=[...new Set((await all()).filter(b=>!b.region||b.region.toLowerCase()===$('region').value.trim().toLowerCase()).map(b=>b.sector).filter(Boolean))].sort((a,b)=>a.localeCompare(b))}
@@ -290,17 +351,17 @@ let bk=null;const mark=()=>{ls.set('lastbk',Date.now());renderMore()};
 function dlf(f){const a=document.createElement('a');a.href=URL.createObjectURL(f);a.download=f.name;a.click()}
 async function out(f){try{if(navigator.canShare&&navigator.canShare({files:[f]})){await navigator.share({files:[f]});return true}}catch(e){if(e.name==='AbortError')return false}dlf(f);return true}
 $('mkbk').onclick=async()=>{$('bkst').textContent='Preparing backup…';const items=[];
- for(const b of await all())items.push({...b,photo:b.photo?await b2d(b.photo):null,extra:await Promise.all((b.extra||[]).map(b2d))});
+ for(const b of await all())items.push({...b,photo:b.photo?await b2d(b.photo):null,extra:await Promise.all((b.extra||[]).map(b2d)),more:await Promise.all((b.more||[]).map(async m=>({bid:m.bid,strokes:m.strokes,mk:m.mk,photo:await b2d(m.photo)})))});
  bk=new File([JSON.stringify({app:'boulderlog',v:1,exported:new Date().toISOString(),items})],'boulderlog-backup-'+new Date().toISOString().slice(0,16).replace(/[:T]/g,'-')+'.json',{type:'application/json'});
  $('bkout').hidden=false;$('bkst').textContent=`Backup ready: ${items.length} boulders, ${(bk.size/1048576).toFixed(1)} MB.`};
 $('bkshare').onclick=async()=>{if(!bk||!await authed())return;$('bkst').textContent='Uploading to Drive…';try{const f=await upload(bk.name,bk,'Boulder Log backup');mark();$('bkst').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('bkst').textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}};$('bkdl').onclick=()=>{if(bk){dlf(bk);mark()}};
 $('imp').onclick=()=>$('fimp').click();
 $('fimp').onchange=async e=>{const f=e.target.files[0];if(!f)return;try{const d=JSON.parse(await f.text());if(d.app!=='boulderlog'||!Array.isArray(d.items))throw 0;
- const have=new Set((await all()).map(b=>b.id));let n=0;for(const b of d.items){if(have.has(b.id))continue;if(b.photo){if(typeof b.photo!=='string'||!b.photo.startsWith('data:image/'))b.photo=null;else b.photo=await(await fetch(b.photo)).blob()}b.extra=Array.isArray(b.extra)?await Promise.all(b.extra.filter(d=>typeof d==='string'&&d.startsWith('data:image/')).map(async d=>await(await fetch(d)).blob())):[];if(b.video&&!/^https?:\/\//i.test(b.video))b.video='';await put(b);n++}
+ const have=new Set((await all()).map(b=>b.id));let n=0;for(const b of d.items){if(have.has(b.id))continue;if(b.photo){if(typeof b.photo!=='string'||!b.photo.startsWith('data:image/'))b.photo=null;else b.photo=await(await fetch(b.photo)).blob()}b.extra=Array.isArray(b.extra)?await Promise.all(b.extra.filter(d=>typeof d==='string'&&d.startsWith('data:image/')).map(async d=>await(await fetch(d)).blob())):[];b.more=Array.isArray(b.more)?(await Promise.all(b.more.map(async m=>m&&typeof m.photo==='string'&&m.photo.startsWith('data:image/')&&typeof m.bid==='string'?{bid:m.bid,strokes:Array.isArray(m.strokes)?m.strokes:[],mk:cleanMk(m.mk),photo:await(await fetch(m.photo)).blob()}:null))).filter(Boolean):[];b.mk=cleanMk(b.mk);if(typeof b.blid!=='string')delete b.blid;if(typeof b.ord!=='number')delete b.ord;if(b.video&&!/^https?:\/\//i.test(b.video))b.video='';await put(b);n++}
  $('impmsg').textContent=`Imported ${n} new, skipped ${d.items.length-n} already on this phone.`}catch(_){$('impmsg').textContent='That file is not a Boulder Log backup.'}e.target.value=''};
 $('gpx').onclick=async()=>{const A=(await all()).filter(b=>b.lat!=null);if(!A.length){alert('No boulders with coordinates yet.');return}
  await out(new File([`<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="Boulder Log" xmlns="http://www.topografix.com/GPX/1/1">\n`+A.map(b=>`<wpt lat="${b.lat}" lon="${b.lng}"><name>${esc(b.name)} ${esc(b.grade)}</name><desc>${esc([b.sector,b.desc].filter(Boolean).join(' - '))}</desc></wpt>`).join('\n')+'\n</gpx>'],'boulders.gpx',{type:'application/gpx+xml'}))};
-let tok=null,tokExp=0;const st=m=>{$('drst').textContent=m;$('pdfs').textContent=m;$('ukcs').textContent=m};
+let tok=null,tokExp=0;const st=m=>{$('drst').textContent=m;$('pdfs').textContent=m;$('ukcs').textContent=m;$('xps').textContent=m};
 function gis(){return new Promise((res,rej)=>{if(window.google&&google.accounts&&google.accounts.oauth2)return res();const s=document.createElement('script');s.src='https://accounts.google.com/gsi/client';s.onload=res;s.onerror=()=>rej(new Error('offline'));document.head.appendChild(s)})}
 async function signIn(){const id=ls.get('cid');if(!id){alert('Open More, paste your Google client ID and tap Save client ID first.');return false}
  if(!navigator.onLine){alert('Go online to sign in.');return false}
@@ -339,15 +400,22 @@ function xlsx(rows){const col=i=>String.fromCharCode(65+i),x=s=>String(s).replac
   'xl/_rels/workbook.xml.rels':XH+'<Relationships xmlns="'+P+'"><Relationship Id="rId1" Type="'+R+'/worksheet" Target="worksheets/sheet1.xml"/></Relationships>',
   'xl/worksheets/sheet1.xml':XH+'<worksheet xmlns="'+S+'"><sheetData>'+sd+'</sheetData></worksheet>'})}
 const ukcGrade=g=>{g=(g||'').trim();if(/^[3-9][ABC]?\+?$/i.test(g))return'font '+g.toLowerCase();if(/^V(\d+|B)\+?$/i.test(g))return g.toUpperCase();return g};
-function ukcRows(list,butt){const R=[['CLIMB NAME','GRADE','STARS','DESCRIPTION','FIRST ASCENT','HEIGHT','PITCHES','GRADE TYPE','GRADE SYSTEM','SYMBOLS']],add=b=>R.push([b.name,ukcGrade(b.grade),b.stars||0,b.desc||'',ukcFA(b),'','','','',ukcSym(b)]);
- if(butt){const g=new Map();list.forEach(b=>{const k=b.sector||'No sector';g.set(k,[...(g.get(k)||[]),b])});g.forEach((v,k)=>{R.push([k]);v.forEach(add)})}else list.forEach(add);return R}
-async function ukcFile(){const S=[...pdfSet()].filter(b=>!b.proj).sort((a,b)=>a.created.localeCompare(b.created)),safe=s=>s.replace(/[\\\/:*?"<>|]+/g,'-'),nm=k=>'UKC missing climbs - '+safe(k)+'.xlsx';
- if($('ukclvl').value==='r')return new File([xlsx(ukcRows(S,true))],nm([...new Set(S.map(b=>b.region).filter(Boolean))].join(' & ')||'Boulders'),{type:XL});
+function ukcRows(list,m){const R=[['CLIMB NAME','GRADE','STARS','DESCRIPTION','FIRST ASCENT','HEIGHT','PITCHES','GRADE TYPE','GRADE SYSTEM','SYMBOLS']],add=b=>R.push([b.name,ukcGrade(b.grade),b.stars||0,b.desc||'',ukcFA(b),'','','','',ukcSym(b)]);
+ if(m==='sec'){const g=new Map();list.forEach(b=>{const k=b.sector||'No sector';g.set(k,[...(g.get(k)||[]),b])});g.forEach((v,k)=>{R.push([k]);v.forEach(add)})}
+ else if(m==='bld'){const nm=b=>b.bname||'Unnamed boulder',dup=new Map(),g=new Map();list.forEach(b=>{const n=nm(b);if(!dup.has(n))dup.set(n,new Set());dup.get(n).add(b.sector||'')});
+  list.forEach(b=>{const k=(b.sector||'')+'\u0001'+nm(b);g.set(k,[...(g.get(k)||[]),b])});
+  g.forEach((v,k)=>{const[sc,n]=k.split('\u0001');R.push([dup.get(n).size>1&&sc?n+' ('+sc+')':n]);v.forEach(add)})}
+ else list.forEach(add);return R}
+const ukcSet=()=>[...pdfSet()].filter(b=>!b.proj).sort((a,b)=>(a.sector||'').localeCompare(b.sector||'')||ordSort(a,b));
+async function ukcFile(){const S=ukcSet(),lv=$('ukclvl').value,bl=lv.endsWith('b'),safe=s=>s.replace(/[\\\/:*?"<>|]+/g,'-'),nm=k=>'UKC missing climbs - '+safe(k)+'.xlsx';
+ if(lv[0]==='r')return new File([xlsx(ukcRows(S,bl?'bld':'sec'))],nm([...new Set(S.map(b=>b.region).filter(Boolean))].join(' & ')||'Boulders'),{type:XL});
  const g=new Map();S.forEach(b=>{const k=b.sector||'No sector';g.set(k,[...(g.get(k)||[]),b])});
- if(g.size===1){const[k,v]=[...g][0];return new File([xlsx(ukcRows(v,false))],nm(k),{type:XL})}
- const F={};for(const[k,v]of g)F[nm(k)]=new Uint8Array(await xlsx(ukcRows(v,false)).arrayBuffer());return new File([zipN(F)],'UKC upload files.zip',{type:'application/zip'})}
-$('ukc').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}const S=pdfSet().filter(b=>!b.proj),np=pdfSet().length-S.length,mg=S.filter(b=>!b.grade).length,me=S.filter(b=>faOf(b).s==='me').length;
- $('ukcs').textContent=S.length+' problem'+(S.length==1?'':'s')+'. '+(np?np+' project'+(np==1?' is':'s are')+' left out. ':'')+(mg?mg+' have no grade, which UKC requires. ':'')+(me?me+' list you as first ascensionist. Check these are genuinely new before uploading.':'');$('ukcopt').hidden=false};
+ if(g.size===1){const[k,v]=[...g][0];return new File([xlsx(ukcRows(v,bl?'bld':null))],nm(k),{type:XL})}
+ const F={};for(const[k,v]of g)F[nm(k)]=new Uint8Array(await xlsx(ukcRows(v,bl?'bld':null)).arrayBuffer());return new File([zipN(F)],'UKC upload files.zip',{type:'application/zip'})}
+function ukcInfo(){const S=pdfSet().filter(b=>!b.proj),np=pdfSet().length-S.length,mg=S.filter(b=>!b.grade).length,me=S.filter(b=>faOf(b).s==='me').length,nb=$('ukclvl').value.endsWith('b')?S.filter(b=>!b.bname).length:0;
+ $('ukcs').textContent=S.length+' problem'+(S.length==1?'':'s')+'. '+(np?np+' project'+(np==1?' is':'s are')+' left out. ':'')+(mg?mg+' have no grade, which UKC requires. ':'')+(nb?nb+' have no boulder name and go under "Unnamed boulder". ':'')+(me?me+' list you as first ascensionist. Check these are genuinely new before uploading.':'')+nlTxt(S)}
+$('ukclvl').onchange=ukcInfo;
+$('ukc').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}ukcInfo();$('ukcopt').hidden=false};
 $('ukcx').onclick=()=>{$('ukcopt').hidden=true};$('ukcsign').onclick=()=>signIn();
 $('ukcphone').onclick=async()=>{const f=await ukcFile();dlf(f);$('ukcs').textContent='Saved '+f.name+' to your phone.'};
 $('ukcdrive').onclick=async()=>{if(!await authed())return;const f=await ukcFile();$('ukcs').textContent='Uploading to Drive…';try{await upload(f.name,f,'UKC missing climbs upload file');$('ukcs').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('ukcs').textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}};
@@ -355,13 +423,65 @@ $('kmz').onclick=async()=>{const A=(await all()).filter(b=>b.lat!=null);if(!A.le
  const kml='<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2"><Document><name>Boulder Log</name>'+A.map(b=>`<Placemark><name>${esc(b.name)} ${esc(b.grade)}</name><description>${esc([b.sector,b.desc].filter(Boolean).join(' - '))}</description><Point><coordinates>${b.lng},${b.lat},0</coordinates></Point></Placemark>`).join('')+'</Document></kml>';
  await out(new File([zip1('doc.kml',new TextEncoder().encode(kml))],'boulders.kmz',{type:'application/vnd.google-earth.kmz'}))};
 $('gksave').onclick=()=>{ls.set('gkey',$('gk').value.trim());gl=null;alert('Saved. Google appears in the map layer button.')};
-$('pdf').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}const n=pdfSet().length;$('pdfs').textContent=n+' boulder'+(n==1?'':'s')+' in this PDF.';$('pdfname').value='Boulder topos '+new Date().toISOString().slice(0,10);const rs=[...new Set(pdfSet().map(b=>b.region&&b.country?b.region+', '+b.country:'').filter(Boolean))];$('pdfreg').value=rs.length?rs.join(' / '):(ls.get('region')||'Hampi, India');$('pdfopt').hidden=false};
+$('pdf').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}const n=pdfSet().length;$('pdfs').textContent=n+' boulder'+(n==1?'':'s')+' in this PDF.'+nlTxt();$('pdfname').value='Boulder topos '+new Date().toISOString().slice(0,10);const rs=[...new Set(pdfSet().map(b=>b.region&&b.country?b.region+', '+b.country:'').filter(Boolean))];$('pdfreg').value=rs.length?rs.join(' / '):(ls.get('region')||'Hampi, India');$('pdfopt').hidden=false};
 $('pdfx').onclick=()=>{$('pdfopt').hidden=true};$('pdfsign').onclick=()=>signIn();
 async function pdfOut(drive){const s=$('pdfs');if(drive&&!await authed())return;s.textContent='Building PDF…';const bl=await makePdf();if(!bl){s.textContent='';return}
  const name=($('pdfname').value.trim().replace(/\.pdf$/i,'').replace(/[\\\/:*?"<>|]+/g,'-')||'Boulder topos')+'.pdf';
  if(!drive){dlf(new File([bl],name,{type:'application/pdf'}));s.textContent='Saved to your phone downloads.';return}
  s.textContent='Uploading to Drive…';try{await upload(name,bl,'Boulder Log topos');s.textContent='Uploaded '+name+' to the Boulder Log folder in Drive.'}catch(e){s.textContent='Upload failed ('+e.message+'). Sign in again and retry.';tok=null}}
 $('pdfphone').onclick=()=>pdfOut(false);$('pdfdrive').onclick=()=>pdfOut(true);
+
+
+// ---- satellite view as photo ----
+let satMap=null,satLayer=null;const satNat=()=>ls.get('mtkey')?19:17,satUrl=()=>{const k=ls.get('mtkey');return k?MT+k:SAT};
+$('sat').onclick=()=>{if(typeof L==='undefined'){alert('The map library has not loaded. Connect to the internet once and reopen the app.');return}
+ $('satopt').hidden=false;const la=parseFloat($('lat').value),lo=parseFloat($('lng').value),c=isNaN(la)||isNaN(lo)?(map?[map.getCenter().lat,map.getCenter().lng]:[15.335,76.46]):[la,lo];
+ if(!satMap){satMap=L.map('satmap',{maxZoom:20}).setView(c,18);satLayer=L.tileLayer(satUrl(),{maxZoom:20,maxNativeZoom:satNat(),crossOrigin:true}).addTo(satMap)}else{satLayer.setUrl(satUrl());satLayer.options.maxNativeZoom=satNat();satMap.setView(c,18)}
+ setTimeout(()=>satMap.invalidateSize(),60);$('sats').textContent='Pan and zoom so the boulder fills the view. North is up. Zoom in only as far as the imagery stays sharp.'};
+$('satx').onclick=()=>{$('satopt').hidden=true};
+$('satgo').onclick=async()=>{const nat=satNat(),bnd=satMap.getBounds();let zc=Math.min(Math.round(satMap.getZoom())+1,nat);
+ const sz=z=>{const a=satMap.project(bnd.getNorthWest(),z),b=satMap.project(bnd.getSouthEast(),z);return{a,w:Math.round(b.x-a.x),h:Math.round(b.y-a.y)}},cnt=S=>(Math.floor((S.a.x+S.w)/256)-Math.floor(S.a.x/256)+1)*(Math.floor((S.a.y+S.h)/256)-Math.floor(S.a.y/256)+1);
+ let S=sz(zc);while(cnt(S)>64&&zc>1){zc--;S=sz(zc)}
+ $('sats').textContent='Fetching imagery…';const c=document.createElement('canvas');c.width=S.w;c.height=S.h;const x=c.getContext('2d');x.fillStyle='#888';x.fillRect(0,0,c.width,c.height);
+ const n=2**zc,url=satUrl(),jobs=[];let fail=0,tot=0;
+ for(let tx=Math.floor(S.a.x/256);tx<=Math.floor((S.a.x+S.w)/256);tx++)for(let ty=Math.floor(S.a.y/256);ty<=Math.floor((S.a.y+S.h)/256);ty++){if(ty<0||ty>=n)continue;tot++;const wx=((tx%n)+n)%n;
+  jobs.push((async()=>{try{const r=await fetch(url.replace('{z}',zc).replace('{x}',wx).replace('{y}',ty));if(!r.ok)throw 0;const im=await createImageBitmap(await r.blob());x.drawImage(im,tx*256-S.a.x,ty*256-S.a.y)}catch(_){fail++}})())}
+ await Promise.all(jobs);if(fail>tot/2){$('sats').textContent='Could not fetch the imagery ('+fail+' of '+tot+' tiles failed). Check your connection and try again.';return}
+ const fs2=Math.max(12,Math.round(c.width*.028));x.font='bold '+fs2+'px sans-serif';x.textBaseline='bottom';x.lineWidth=3;x.strokeStyle='rgba(0,0,0,.6)';x.fillStyle='#fff';const t='Imagery © '+(ls.get('mtkey')?'MapTiler':'Esri');x.strokeText(t,8,c.height-6);x.fillText(t,8,c.height-6);
+ const f=await new Promise(r=>c.toBlob(r,'image/jpeg',.85));if(!$('lat').value){const m=satMap.getCenter();$('lat').value=m.lat.toFixed(6);$('lng').value=m.lng.toFixed(6)}
+ $('satopt').hidden=true;await pick(f)};
+
+// ---- reorder ----
+let ordList=[];
+async function ordRender(){const s2=$('ordsec').value,A=(await all()).filter(b=>(b.sector||'')===s2).sort(ordSort);ordList=A;const el=$('ordl');el.innerHTML='';
+ A.forEach((b,i)=>{const r=document.createElement('div');r.className='lgr';r.style.cssText='display:flex;gap:6px;align-items:center';r.innerHTML='<span style="flex:1;min-width:0"><b>'+(i+1)+'. '+esc(b.name)+'</b> <span class="m">'+esc(b.grade)+(b.bname?' · '+esc(b.bname):'')+'</span></span>';
+  [['▲',-1],['▼',1]].forEach(([t,d])=>{const x=document.createElement('button');x.type='button';x.className='s';x.textContent=t;x.style.cssText='width:auto;margin:0;padding:8px 14px';x.disabled=i+d<0||i+d>=A.length;x.onclick=()=>ordMove(i,d);r.appendChild(x)});el.appendChild(r)})}
+async function ordMove(i,d){const A=ordList;[A[i],A[i+d]]=[A[i+d],A[i]];for(let k=0;k<A.length;k++)if(A[k].ord!==k){A[k].ord=k;await put(A[k])}await ordRender()}
+$('ord').onclick=async()=>{const A=await all();if(!A.length){alert('Nothing logged yet.');return}const ss=[...new Set(A.map(b=>b.sector||''))].sort((a,b)=>a.localeCompare(b));
+ $('ordsec').innerHTML=ss.map(x=>'<option value="'+esc(x)+'">'+esc(x||'No sector')+'</option>').join('');if(ss.includes($('fs').value))$('ordsec').value=$('fs').value;$('ordopt').hidden=false;await ordRender()};
+$('ordsec').onchange=ordRender;$('ordx').onclick=()=>{$('ordopt').hidden=true};
+
+// ---- theCrag / The Topo bundles ----
+const pad2=n=>String(n).padStart(2,'0'),asc=s=>String(s||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Za-z0-9 ._()&+-]+/g,'').replace(/\s+/g,' ').trim()||'x',csvq=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"',u8=async bl=>new Uint8Array(await bl.arrayBuffer());
+const stars3=n=>'★'.repeat(n||0)+'☆'.repeat(3-(n||0));
+async function bundle(kind){const L=blds(pdfSet()),F={},crag=kind==='crag',rows=[['Sector','Boulder','Problem name','Gear style','Stars','Grade','Project','First ascent by','First ascent date','Latitude','Longitude','Style notes','Description','Beta video','Photo files','Line number on photo']],all2=[];
+ for(let i=0;i<L.length;i++){const X=L[i],g=X.g,bn=(g.find(b=>b.bname)||{}).bname||'',nm=bn||(g.length===1?g[0].name:'Unnamed boulder'),sec=asc(g[0].sector||'No sector'),base=pad2(i+1)+' '+asc(nm),c=g.find(b=>b.lat!=null),files=[];
+  for(let p=0;p<X.bids.length;p++){const G=X.G.get(X.bids[p]),sx=X.bids.length>1?' photo '+(p+1):'',dir=crag?sec+'/':base+'/',stem=crag?base+sx:'photo'+sx.replace(' photo',''),cn=dir+stem+' clean.jpg',ln2=dir+stem+' lines.jpg';
+   F[cn]=await u8(G[0].photo);let has=false;if(G.some(it=>it.strokes.length)){const cx=document.createElement('canvas');drawGroup(cx,await createImageBitmap(G[0].photo),G,g.length);F[ln2]=await u8(await new Promise(r=>cx.toBlob(r,'image/jpeg',.88)));has=true}
+   files.push({G,cn,ln:has?ln2:''})}
+  const T=['BOULDER: '+nm,'Sector: '+(g[0].sector||'-'),'Region: '+[g[0].region,g[0].country].filter(Boolean).join(', '),'Coordinates: '+(c?c.lat.toFixed(6)+', '+c.lng.toFixed(6):'-'),'Photos: '+files.map(f=>f.cn.split('/').pop()+(f.ln?' + '+f.ln.split('/').pop():'')).join('; '),'','PROBLEMS (numbers match the coloured lines on the photo)',''];
+  [...g].sort(ordSort).forEach(b=>{const k=g.indexOf(b)+1,pf=files.filter(f=>f.G.some(it=>it.b===b)),fa=faOf(b);
+   rows.push([g[0].sector||'',bn,b.name,'Boulder',b.stars||0,b.grade||'',b.proj?'Yes':'',fa.name,fa.date,b.lat!=null?b.lat:(c?c.lat:''),b.lng!=null?b.lng:(c?c.lng:''),propList(b).join(', '),b.desc||'',b.video||'',pf.map(f=>f.cn.split('/').pop()).join(' | '),g.length>1?k:'']);
+   T.push(k+'. '+b.name+(b.grade?'   '+b.grade:'')+'   '+stars3(b.stars),'   '+faText(b));if(propList(b).length)T.push('   Properties: '+propList(b).join(', '));if(b.desc)T.push('   '+b.desc.replace(/\n/g,'\n   '));if(b.video)T.push('   Beta video: '+b.video);T.push('')});
+  if(!crag){F[base+'/text.txt']=T.join('\n');let n=0;for(const b of g)for(const bl of (b.extra||[])){n++;F[base+'/extra '+n+' ('+asc(b.name)+').jpg']=await u8(bl)}all2.push(T.join('\n'))}}
+ if(crag){F['routes.csv']='\ufeff'+rows.map(r=>r.map(csvq).join(',')).join('\r\n');
+  F['README.txt']='theCrag upload pack\n\ntheCrag has no bulk import for new routes. Its Add Routes form takes one route per row, so routes.csv is a table to open in a spreadsheet and copy from, in the same order as the form fields (Name, Gear style, Stars, Grade, Description, First ascent, Lat/Lon).\n\nGear style is Boulder for every row. Descriptions are your own words. Names must be unique within the same boulder or sector.\n\nPhotos are in one folder per sector. "clean" files have no lines or labels and are the base photo to upload. "lines" files have the numbered coloured lines; the Line number column in routes.csv says which number is which problem.\n'}
+ else{F['all boulders.txt']=all2.join('\n\n----------------------------------------\n\n');F['README.txt']='The Topo pack\n\nThe Topo has no import route, so this is a reference bundle to re-enter things in its app. One folder per boulder, numbered in sector order, holding the clean photo, the photo with numbered lines, text.txt with every problem, and any extra photos. all boulders.txt has all the text in one file.\n'}
+ return new File([zipN(F)],crag?'theCrag upload pack.zip':'The Topo pack.zip',{type:'application/zip'})}
+const xpInfo=()=>{const n=pdfSet().length;$('xps').textContent=n+' problem'+(n==1?'':'s')+' (selected, or all shown). '+($('xpkind').value==='crag'?'theCrag has no bulk import for new routes, so the CSV is a table to copy from, plus clean and line photos.':'The Topo has no import, so this is a photo and text bundle to re-enter.')+nlTxt()};
+$('xp').onclick=()=>{if(!shown.length){alert('Nothing to export.');return}xpInfo();$('xpopt').hidden=false};$('xpkind').onchange=xpInfo;$('xpx').onclick=()=>{$('xpopt').hidden=true};$('xpsign').onclick=()=>signIn();
+$('xpphone').onclick=async()=>{$('xps').textContent='Building…';try{const f=await bundle($('xpkind').value);dlf(f);$('xps').textContent='Saved '+f.name+' ('+(f.size/1048576).toFixed(1)+' MB) to your phone.'}catch(e){$('xps').textContent='Failed: '+e.message}};
+$('xpdrive').onclick=async()=>{if(!await authed())return;$('xps').textContent='Building…';try{const f=await bundle($('xpkind').value);$('xps').textContent='Uploading '+(f.size/1048576).toFixed(1)+' MB to Drive…';await upload(f.name,f,'Boulder Log export');$('xps').textContent='Uploaded '+f.name+' to the Boulder Log folder in Drive.'}catch(e){$('xps').textContent='Failed ('+e.message+'). If the file is large, use Save to phone instead.'}};
 $('mtsave').onclick=()=>{ls.set('mtkey',$('mtk').value.trim());if(sat)setSat();alert('Saved. Satellite now uses MapTiler.')};
 if('serviceWorker'in navigator){let rl=false;navigator.serviceWorker.addEventListener('controllerchange',()=>{if(rl)location.reload()});
  navigator.serviceWorker.register('sw.js').then(reg=>{const ready=w=>{$('upd').style.display='block';$('upd').onclick=()=>{rl=true;w.postMessage('skip')}};
